@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'boxes/box_x1.dart';
-import 'boxes/box_x2.dart';
-import 'boxes/box_x3.dart';
-import 'boxes/box_x4.dart';
-import 'boxes/box_x5.dart';
-import 'boxes/box_x6.dart';
-import 'boxes/box_x7.dart';
-import 'boxes/box_x8.dart';
-import 'boxes/box_x9.dart';
-import 'boxes/box_x10.dart';
-import 'boxes/box_x11.dart';
-import 'boxes/box_x12.dart';
-import 'boxes/box_x13.dart';
-import 'boxes/advanced_calendar.dart';
+import 'Widgits/Billing/Billing.dart';
+import 'MainDashboard/mainDash_Widgit.dart';
+import 'Widgits/Setting/setting.dart';
+import 'Widgits/SalesSummary/salesSum.dart';
+import 'Widgits/Search/search.dart';
+import 'Widgits/Drivers/driver1.dart';
+import 'Widgits/Drivers/driver2.dart';
+import 'Widgits/Drivers/driver3.dart';
+import 'Widgits/Drivers/driver4.dart';
+import 'Widgits/Integrations/Integrations.dart';
+import 'Widgits/Drivers/driverSum.dart';
+import 'Widgits/Calendar/calendar.dart';
+import 'Widgits/Log/log.dart';
+import 'Extensions/advanced_calendar.dart';
 import 'constants.dart';
 import 'dashboard_page.dart';
 
@@ -70,7 +70,7 @@ Widget build(BuildContext context) {
                     // Box x2
                     Expanded(
                       flex: 8,
-                      child: BoxX2(), 
+                      child: BoxX2(logMessages: logMessages),
                     ),
                     // Spacer
                     Expanded(flex: 1, child: SizedBox()),

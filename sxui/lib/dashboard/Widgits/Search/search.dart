@@ -1,9 +1,21 @@
-// box_x5.dart
-
+//Author: Will Soltani
+//Version 1.0
+//Revised: 30-09-2024
 import 'package:flutter/material.dart';
-import '../widgets/dashboard_box.dart';
-import '../constants.dart';
+import '../../Extensions/dashboard_box.dart';
+import '../../constants.dart';
 
+/// A responsive search box widget that allows users to search for customers and patients.
+/// The widget provides an interactive experience with hover effects and auto-complete suggestions,
+/// enhancing user interaction and improving search functionality.
+///
+/// This widget includes:
+/// - Two sections: one for searching 'Customers' and the other for 'Patients'.
+/// - Responsive scaling for text, padding, and other UI elements based on the available box size.
+/// - Autocomplete text fields with suggestions filtered based on the user’s input, making it easier to find specific entries.
+/// - A dropdown with hover effects that highlights the options for better visibility and selection.
+///
+/// @param key The optional key for this widget.
 class BoxX5 extends StatefulWidget {
   const BoxX5({Key? key}) : super(key: key);
 
@@ -60,11 +72,11 @@ class _BoxX5State extends State<BoxX5> {
     super.dispose();
   }
 
-  // Helper function to filter and sort names based on query
+  /// Filters and sorts a list of names based on the provided query.
+  /// @param names The list of names to filter.
+  /// @param query The query string to filter names by.
   List<String> _filterAndSort(List<String> names, String query) {
     final lowerQuery = query.toLowerCase();
-
-    // Split names into first and last names
     final List<String> firstNameMatches = [];
     final List<String> lastNameMatches = [];
 
@@ -76,8 +88,6 @@ class _BoxX5State extends State<BoxX5> {
         lastNameMatches.add(name);
       }
     }
-
-    // Combine the lists with first name matches first
     return [...firstNameMatches, ...lastNameMatches];
   }
 
@@ -96,13 +106,14 @@ class _BoxX5State extends State<BoxX5> {
           // Calculate scaling factors based on available space
           double widthScale = boxWidth / baseWidth;
           double heightScale = boxHeight / baseHeight;
-          double scaleFactor = widthScale < heightScale ? widthScale : heightScale;
+          double scaleFactor =
+              widthScale < heightScale ? widthScale : heightScale;
 
           // Clamp the scaleFactor to prevent excessive scaling
           scaleFactor = scaleFactor.clamp(0.8, 1.2);
 
           // Define scaled sizes with clamping for readability
-          double titleFontSize = (18.0 * scaleFactor).clamp(16.0, 24.0); // Increased title font size
+          double titleFontSize = (18.0 * scaleFactor).clamp(16.0, 24.0);
           double inputFontSize = (14.0 * scaleFactor).clamp(12.0, 18.0);
           double padding = (16.0 * scaleFactor).clamp(12.0, 24.0);
           double spacing = (8.0 * scaleFactor).clamp(4.0, 12.0);
@@ -130,7 +141,7 @@ class _BoxX5State extends State<BoxX5> {
                       SizedBox(height: spacing),
                       // Search Box: Search Customer
                       FractionallySizedBox(
-                        widthFactor: 0.9, // 90% width of the parent (10% narrower)
+                        widthFactor: 0.9,
                         child: Autocomplete<String>(
                           optionsBuilder: (TextEditingValue textEditingValue) {
                             if (textEditingValue.text.isEmpty) {
@@ -143,7 +154,6 @@ class _BoxX5State extends State<BoxX5> {
                               TextEditingController fieldTextEditingController,
                               FocusNode fieldFocusNode,
                               VoidCallback onFieldSubmitted) {
-                            // Assign the controller
                             _customerController.text =
                                 fieldTextEditingController.text;
                             fieldTextEditingController.addListener(() {
@@ -154,7 +164,7 @@ class _BoxX5State extends State<BoxX5> {
                               controller: fieldTextEditingController,
                               focusNode: fieldFocusNode,
                               style: TextStyle(
-                                color: Colors.white, // White input text
+                                color: Colors.white,
                                 fontSize: inputFontSize,
                               ),
                               decoration: InputDecoration(
@@ -183,14 +193,13 @@ class _BoxX5State extends State<BoxX5> {
                                 elevation: 4.0,
                                 color: Colors.grey[800],
                                 child: Container(
-                                  width: boxWidth * 0.45, // Match parent width
-                                  constraints: BoxConstraints(
-                                    maxHeight: 250.0, // Approx. 10 items
-                                  ),
+                                  width: boxWidth * 0.45,
+                                  constraints: BoxConstraints(maxHeight: 250.0),
                                   child: ListView.builder(
                                     padding: EdgeInsets.zero,
-                                    itemCount:
-                                        options.length > 10 ? 10 : options.length,
+                                    itemCount: options.length > 10
+                                        ? 10
+                                        : options.length,
                                     itemBuilder:
                                         (BuildContext context, int index) {
                                       final String option =
@@ -210,7 +219,7 @@ class _BoxX5State extends State<BoxX5> {
                     ],
                   ),
                 ),
-                SizedBox(width: spacing * 2), // Space between the two sections
+                SizedBox(width: spacing * 2),
                 // Right Side: Patient
                 Expanded(
                   child: Column(
@@ -230,7 +239,7 @@ class _BoxX5State extends State<BoxX5> {
                       SizedBox(height: spacing),
                       // Search Box: Search Patient
                       FractionallySizedBox(
-                        widthFactor: 0.9, // 90% width of the parent (10% narrower)
+                        widthFactor: 0.9,
                         child: Autocomplete<String>(
                           optionsBuilder: (TextEditingValue textEditingValue) {
                             if (textEditingValue.text.isEmpty) {
@@ -243,7 +252,6 @@ class _BoxX5State extends State<BoxX5> {
                               TextEditingController fieldTextEditingController,
                               FocusNode fieldFocusNode,
                               VoidCallback onFieldSubmitted) {
-                            // Assign the controller
                             _patientController.text =
                                 fieldTextEditingController.text;
                             fieldTextEditingController.addListener(() {
@@ -254,7 +262,7 @@ class _BoxX5State extends State<BoxX5> {
                               controller: fieldTextEditingController,
                               focusNode: fieldFocusNode,
                               style: TextStyle(
-                                color: Colors.white, // White input text
+                                color: Colors.white,
                                 fontSize: inputFontSize,
                               ),
                               decoration: InputDecoration(
@@ -283,14 +291,13 @@ class _BoxX5State extends State<BoxX5> {
                                 elevation: 4.0,
                                 color: Colors.grey[800],
                                 child: Container(
-                                  width: boxWidth * 0.45, // Match parent width
-                                  constraints: BoxConstraints(
-                                    maxHeight: 250.0, // Approx. 10 items
-                                  ),
+                                  width: boxWidth * 0.45,
+                                  constraints: BoxConstraints(maxHeight: 250.0),
                                   child: ListView.builder(
                                     padding: EdgeInsets.zero,
-                                    itemCount:
-                                        options.length > 10 ? 10 : options.length,
+                                    itemCount: options.length > 10
+                                        ? 10
+                                        : options.length,
                                     itemBuilder:
                                         (BuildContext context, int index) {
                                       final String option =
@@ -354,18 +361,14 @@ class _DropdownOptionState extends State<DropdownOption> {
           widget.onSelected(widget.option);
         },
         child: Container(
-          color: _isHovered
-              ? darkPurple.withOpacity(0.8)
-              : Colors.grey[800],
-          padding:
-              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          color: _isHovered ? darkPurple.withOpacity(0.8) : Colors.grey[800],
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: Text(
             widget.option,
             style: TextStyle(
               color: Colors.white,
               fontSize: 14.0,
-              fontWeight:
-                  _isHovered ? FontWeight.bold : FontWeight.normal,
+              fontWeight: _isHovered ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
