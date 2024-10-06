@@ -1,7 +1,17 @@
+// Author: Will Soltani
+// Version: 1.0
+// Revised: 30-09-2024
+
+// This widget, BoxX13, displays a log of messages in a styled container.
+// It shows both uncompleted and completed tasks, with a distinction in appearance between them.
+//
+// - **logMessages**: A ValueNotifier that holds a list of structured log messages.
+// - **build**: The main build function that sets up the container and displays the log messages using a ValueListenableBuilder.
+
 import 'package:flutter/material.dart';
 
 class BoxX13 extends StatelessWidget {
-  final ValueNotifier<List<Map<String, dynamic>>> logMessages; // Updated to hold structured messages
+  final ValueNotifier<List<Map<String, dynamic>>> logMessages;
 
   BoxX13({Key? key, required this.logMessages}) : super(key: key);
 
@@ -30,9 +40,11 @@ class BoxX13 extends StatelessWidget {
             child: ValueListenableBuilder<List<Map<String, dynamic>>>(
               valueListenable: logMessages,
               builder: (context, messages, _) {
-                // Filter messages for today's uncompleted tasks
-                final uncompletedTasks = messages.where((message) => !message['completed']).toList();
-                final completedTasks = messages.where((message) => message['completed']).toList();
+                // Sort and filter messages based on their completion status.
+                final uncompletedTasks =
+                    messages.where((message) => !message['completed']).toList();
+                final completedTasks =
+                    messages.where((message) => message['completed']).toList();
                 final sortedMessages = [...uncompletedTasks, ...completedTasks];
 
                 return ListView.builder(
@@ -45,16 +57,20 @@ class BoxX13 extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: sortedMessages[index]['completed'] ? Colors.white70 : Colors.white60,
+                          color: sortedMessages[index]['completed']
+                              ? Colors.white70
+                              : Colors.white60,
                           width: 1.5,
                         ),
                       ),
                       child: Text(
                         sortedMessages[index]['description'],
                         style: TextStyle(
-                          fontSize: 12, // Smaller font size
+                          fontSize: 12,
                           color: Colors.white,
-                          fontWeight: sortedMessages[index]['completed'] ? FontWeight.normal : FontWeight.bold,
+                          fontWeight: sortedMessages[index]['completed']
+                              ? FontWeight.normal
+                              : FontWeight.bold,
                         ),
                       ),
                     );

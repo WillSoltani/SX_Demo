@@ -1,7 +1,20 @@
+//Author: Will Soltani
+//Version 1.0
+//Revised: 30-09-2024
 import 'package:flutter/material.dart';
-import '../widgets/dashboard_box.dart';
-import '../constants.dart';
+import '../../Extensions/dashboard_box.dart';
+import '../../constants.dart';
 
+/// A box that displays the daily sales performance of the business, showing a sales amount and a progress bar.
+/// It visually compares today's sales to yesterday's, providing a clear overview of business progress.
+///
+/// This widget includes:
+/// - A dollar sign icon for visual emphasis on the financial aspect.
+/// - Text to display the sales amount for the day.
+/// - A progress bar representing the percentage of today's sales compared to yesterday's.
+/// - Responsive design: Adjusts icon size, text size, and padding based on the available box width to ensure visibility on different screen sizes.
+///
+/// @param key The optional key for this widget.
 class BoxX4 extends StatelessWidget {
   const BoxX4({Key? key}) : super(key: key);
 
@@ -77,7 +90,8 @@ class BoxX4 extends StatelessWidget {
                       // Progress bar and percentage text
                       LayoutBuilder(
                         builder: (context, progressConstraints) {
-                          double progressBarWidth = progressConstraints.maxWidth;
+                          double progressBarWidth =
+                              progressConstraints.maxWidth;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +103,8 @@ class BoxX4 extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: Colors.grey[500],
                                   borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(color: Colors.white, width: 1),
+                                  border:
+                                      Border.all(color: Colors.white, width: 1),
                                 ),
                                 child: FractionallySizedBox(
                                   alignment: Alignment.centerLeft,

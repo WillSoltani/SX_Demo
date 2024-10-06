@@ -1,4 +1,19 @@
-// File: boxes/box_x9.dart
+// Author: Will Soltani
+// Version 1.0
+// Revised: 30-09-2024
+// This widget, BoxX8, provides a dashboard to manage Pickup and Delivery sections.
+// Users can view, sort, and interact with pickup and delivery items. Pickups can have their statuses toggled between 'Regular' and 'Rushed',
+// and delivery times can be modified through a time picker. Changes are logged and feedback is provided to the user.
+//
+// - **PickupItem & DeliveryItem**: These are data classes representing each pickup and delivery item.
+// - **NoGlowScrollBehavior**: A custom scroll behavior that removes the overscroll glow effect for a smoother UI experience.
+// - **_logChange**: Logs changes made to pickup or delivery items into the `logMessages` notifier, allowing for change tracking.
+// - **_sortedPickupItems & _sortedDeliveryItems**: Sort the lists of pickup and delivery items. Pickup items are sorted to prioritize 'Rushed' status first, then alphabetically. Delivery items are sorted based on time in ascending order.
+// - **_showPickupStatusMenu**: Displays a popup menu to change the status of a pickup item between 'Regular' (P) and 'Rushed' (R).
+// - **_modifyDeliveryTime**: Allows the modification of a delivery item's time using a time picker dialog.
+// - **_buildPickupItem & _buildDeliveryItem**: Build the UI for individual pickup and delivery items, with interactive elements for status change and time modification.
+// - **build**: The main build function that constructs the UI, displaying both the pickup and delivery sections.
+
 import 'package:flutter/material.dart';
 
 /// Data class representing a Pickup item.
@@ -28,23 +43,25 @@ class DeliveryItem {
 /// Custom ScrollBehavior to remove the overscroll glow.
 class NoGlowScrollBehavior extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }
 
-/// A widget representing BoxX9 with Pickup and Delivery sections.
-class BoxX9 extends StatefulWidget {
-  final ValueNotifier<List<Map<String, dynamic>>> logMessages; // Updated type
+/// A widget representing BoxX8 with Pickup and Delivery sections.
+class BoxX8 extends StatefulWidget {
+  final ValueNotifier<List<Map<String, dynamic>>>
+      logMessages; // For tracking log messages.
 
-  const BoxX9({Key? key, required this.logMessages}) : super(key: key);
+  const BoxX8({Key? key, required this.logMessages}) : super(key: key);
 
   @override
-  _BoxX9State createState() => _BoxX9State();
+  _BoxX8State createState() => _BoxX8State();
 }
 
-class _BoxX9State extends State<BoxX9> {
-  // Define text styles
+class _BoxX8State extends State<BoxX8> {
+  // Define text styles for consistency.
   static const TextStyle titleStyle = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.bold,
@@ -68,68 +85,45 @@ class _BoxX9State extends State<BoxX9> {
     fontWeight: FontWeight.bold,
   );
 
-  // Initial list of Pickup items
+  // Initial list of Pickup items.
   List<PickupItem> _pickupItems = [
-    PickupItem(label: 'PK1', iconText: 'P', iconColor: Colors.red),
+    PickupItem(label: 'PK1', iconText: 'P', iconColor: Colors.green),
     PickupItem(label: 'PK2', iconText: 'P', iconColor: Colors.green),
     PickupItem(label: 'PK3', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK4', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK5', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK6', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK7', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK8', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK9', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK10', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK11', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK12', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK13', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK14', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK15', iconText: 'P', iconColor: Colors.green),
-    PickupItem(label: 'PK16', iconText: 'P', iconColor: Colors.green),
   ];
 
-  // Initial list of Delivery items
+  // Initial list of Delivery items.
   List<DeliveryItem> _deliveryItems = [
-    DeliveryItem(label: 'DL1', time: TimeOfDay(hour: 6, minute: 15)),
-    DeliveryItem(label: 'DL2', time: TimeOfDay(hour: 7, minute: 30)),
-    DeliveryItem(label: 'DL3', time: TimeOfDay(hour: 8, minute: 45)),
-    DeliveryItem(label: 'DL4', time: TimeOfDay(hour: 9, minute: 10)),
-    DeliveryItem(label: 'DL5', time: TimeOfDay(hour: 10, minute: 25)),
-    DeliveryItem(label: 'DL6', time: TimeOfDay(hour: 11, minute: 40)),
-    DeliveryItem(label: 'DL7', time: TimeOfDay(hour: 12, minute: 55)),
-    DeliveryItem(label: 'DL8', time: TimeOfDay(hour: 13, minute: 20)),
-    DeliveryItem(label: 'DL9', time: TimeOfDay(hour: 14, minute: 35)),
-    DeliveryItem(label: 'DL10', time: TimeOfDay(hour: 15, minute: 50)),
-    DeliveryItem(label: 'DL11', time: TimeOfDay(hour: 16, minute: 5)),
-    DeliveryItem(label: 'DL12', time: TimeOfDay(hour: 17, minute: 20)),
-    DeliveryItem(label: 'DL13', time: TimeOfDay(hour: 18, minute: 45)),
-    DeliveryItem(label: 'DL14', time: TimeOfDay(hour: 19, minute: 10)),
-    DeliveryItem(label: 'DL15', time: TimeOfDay(hour: 20, minute: 30)),
-    DeliveryItem(label: 'DL16', time: TimeOfDay(hour: 21, minute: 0)),
-    DeliveryItem(label: 'DL17', time: TimeOfDay(hour: 22, minute: 15)),
-    DeliveryItem(label: 'DL18', time: TimeOfDay(hour: 23, minute: 35)),
-    DeliveryItem(label: 'DL19', time: TimeOfDay(hour: 0, minute: 45)),
-    DeliveryItem(label: 'DL20', time: TimeOfDay(hour: 1, minute: 10)),
-    DeliveryItem(label: 'DL21', time: TimeOfDay(hour: 2, minute: 25)),
-    DeliveryItem(label: 'DL22', time: TimeOfDay(hour: 3, minute: 50)),
+    DeliveryItem(label: 'DL1', time: TimeOfDay(hour: 8, minute: 0)),
+    DeliveryItem(label: 'DL2', time: TimeOfDay(hour: 9, minute: 30)),
+    DeliveryItem(label: 'DL3', time: TimeOfDay(hour: 10, minute: 15)),
+    DeliveryItem(label: 'DL4', time: TimeOfDay(hour: 11, minute: 45)),
+    DeliveryItem(label: 'DL5', time: TimeOfDay(hour: 12, minute: 30)),
+    DeliveryItem(label: 'DL6', time: TimeOfDay(hour: 13, minute: 0)),
+    DeliveryItem(label: 'DL7', time: TimeOfDay(hour: 14, minute: 20)),
+    DeliveryItem(label: 'DL8', time: TimeOfDay(hour: 15, minute: 50)),
+    DeliveryItem(label: 'DL9', time: TimeOfDay(hour: 16, minute: 10)),
+    DeliveryItem(label: 'DL10', time: TimeOfDay(hour: 17, minute: 25)),
   ];
 
   @override
   void initState() {
     super.initState();
-    // Initially sort the lists
+    // Sorts the initial pickup and delivery lists.
     _pickupItems = _sortedPickupItems();
     _deliveryItems = _sortedDeliveryItems();
   }
 
-  /// Log changes to the logMessages notifier.
-  void _logChange(String message) {
-    // Create a log entry as a map
-    Map<String, dynamic> logEntry = {
-      'description': message,
-      'completed': false, // Adjust based on your logic
-    };
-    widget.logMessages.value = [...widget.logMessages.value, logEntry];
+  /// Logs changes to the `logMessages` notifier.
+  void _logChange(String description, bool completed) {
+    widget.logMessages.value = [
+      ...widget.logMessages.value,
+      {
+        'description': description,
+        'completed': completed,
+      },
+    ];
+    widget.logMessages.notifyListeners(); // Notifies listeners immediately.
   }
 
   /// Sorts the Pickup items, prioritizing 'R' over 'P', then alphabetically by label.
@@ -158,9 +152,10 @@ class _BoxX9State extends State<BoxX9> {
     return sortedList;
   }
 
-  /// Shows a popup menu to toggle Pickup status between 'P' and 'R'.
+  /// Shows a popup menu to toggle Pickup status between 'P' (Regular) and 'R' (Rushed).
   void _showPickupStatusMenu(PickupItem item, Offset position) async {
-    final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context)!.context.findRenderObject() as RenderBox;
 
     String? selected = await showMenu<String>(
       context: context,
@@ -173,14 +168,16 @@ class _BoxX9State extends State<BoxX9> {
           value: 'P',
           child: Text(
             'P - Regular',
-            style: TextStyle(color: item.iconText == 'P' ? Colors.blue : Colors.black),
+            style: TextStyle(
+                color: item.iconText == 'P' ? Colors.blue : Colors.black),
           ),
         ),
         PopupMenuItem<String>(
           value: 'R',
           child: Text(
             'R - Rushed',
-            style: TextStyle(color: item.iconText == 'R' ? Colors.blue : Colors.black),
+            style: TextStyle(
+                color: item.iconText == 'R' ? Colors.blue : Colors.black),
           ),
         ),
       ],
@@ -193,10 +190,8 @@ class _BoxX9State extends State<BoxX9> {
         _pickupItems = _sortedPickupItems();
       });
 
-      // Log the change
-      _logChange('🌟 USER 1 changed ${item.label} status to $selected');
-
-      // Optional: Provide user feedback
+      // Log the change and show feedback.
+      _logChange('🌟 USER 1 changed ${item.label} status to $selected', false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('🌟 USER 1 changed ${item.label} status to $selected'),
@@ -219,13 +214,14 @@ class _BoxX9State extends State<BoxX9> {
         _deliveryItems = _sortedDeliveryItems();
       });
 
-      // Log the change
-      _logChange('🌟 USER 1 updated ${item.label} time to ${pickedTime.format(context)}');
-
-      // Optional: Provide user feedback
+      // Log the change and show feedback.
+      _logChange(
+          '🌟 USER 1 updated ${item.label} time to ${pickedTime.format(context)}',
+          false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('🌟 USER 1 updated ${item.label} time to ${pickedTime.format(context)}'),
+          content: Text(
+              '🌟 USER 1 updated ${item.label} time to ${pickedTime.format(context)}'),
           duration: Duration(seconds: 3),
         ),
       );
@@ -287,7 +283,8 @@ class _BoxX9State extends State<BoxX9> {
               _modifyDeliveryTime(item, details.globalPosition);
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
               decoration: BoxDecoration(
                 color: Colors.deepPurple,
                 border: Border.all(color: Colors.deepPurple, width: 1),
@@ -321,7 +318,7 @@ class _BoxX9State extends State<BoxX9> {
         children: [
           Center(
             child: Text(
-              'Driver1',
+              'Driver3',
               style: titleStyle,
               textAlign: TextAlign.center,
             ),
@@ -347,11 +344,13 @@ class _BoxX9State extends State<BoxX9> {
                               ? ListView.builder(
                                   itemCount: _pickupItems.length,
                                   itemBuilder: (context, index) {
-                                    return _buildPickupItem(_pickupItems[index]);
+                                    return _buildPickupItem(
+                                        _pickupItems[index]);
                                   },
                                 )
                               : Center(
-                                  child: Text('No pickups available', style: itemStyle),
+                                  child: Text('No pickups available',
+                                      style: itemStyle),
                                 ),
                         ),
                       ),
@@ -383,16 +382,19 @@ class _BoxX9State extends State<BoxX9> {
                               ? ListView.builder(
                                   itemCount: _deliveryItems.length,
                                   itemBuilder: (context, index) {
-                                    return _buildDeliveryItem(_deliveryItems[index]);
+                                    return _buildDeliveryItem(
+                                        _deliveryItems[index]);
                                   },
                                 )
                               : Center(
-                                  child: Text('No deliveries available', style: itemStyle),
+                                  child: Text('No deliveries available',
+                                      style: itemStyle),
                                 ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Center(child: Text('$totalDeliveries', style: titleStyle)),
+                      Center(
+                          child: Text('$totalDeliveries', style: titleStyle)),
                     ],
                   ),
                 ),
