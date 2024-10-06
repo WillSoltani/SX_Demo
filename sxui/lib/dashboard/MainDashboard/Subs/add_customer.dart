@@ -1,8 +1,8 @@
 // File: dashboard/boxes/add_customer.dart
 
 // Author: Will Soltani
-// Version: 1.5
-// Revised: 07-10-2024
+// Version: 1.11
+// Revised: 14-10-2024
 
 // This widget, AddCustomer, provides a form to add new customers.
 // It includes "Account Info" and "Billing Info" sections with various input fields,
@@ -47,8 +47,9 @@ class _AddCustomerState extends State<AddCustomer> {
   final TextEditingController _additionalInfoController =
       TextEditingController();
 
-  // New Controller for "Type" field
+  // State variables for dropdown and radio button selections
   String _selectedType = '---';
+  String? _statementDeliveryMethod; // 'Email' or 'Printed Paper'
 
   // Mock address suggestions
   List<String> _addressSuggestions = [
@@ -111,7 +112,8 @@ class _AddCustomerState extends State<AddCustomer> {
   /// Provides address suggestions based on user input.
   List<String> _getAddressSuggestions(String query) {
     return _addressSuggestions
-        .where((address) => address.toLowerCase().contains(query.toLowerCase()))
+        .where((address) =>
+            address.toLowerCase().contains(query.toLowerCase()))
         .toList();
   }
 
@@ -120,6 +122,27 @@ class _AddCustomerState extends State<AddCustomer> {
     setState(() {
       _isBillingInfoSelected = isBilling;
     });
+  }
+
+  /// Widget for individual form fields to reduce redundancy
+  Widget _buildFormField({
+    required String label,
+    required Widget field,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: Colors.white),
+          ),
+          SizedBox(height: 5),
+          field,
+        ],
+      ),
+    );
   }
 
   @override
@@ -180,480 +203,640 @@ class _AddCustomerState extends State<AddCustomer> {
                 padding: EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    Row(
+                    // Structured Layout for Alignment
+                    Column(
                       children: [
-                        // Left Column
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // First Name
-                              Text(
-                                'First Name',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _firstNameController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'First Name',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'First name is required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Company Name
-                              Text(
-                                'Company Name',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _companyNameController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Company Name',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if ((_firstNameController.text.isEmpty ||
-                                          _lastNameController.text.isEmpty) &&
-                                      (value == null || value.isEmpty)) {
-                                    return 'Company name is required if first or last name is missing';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Phone Number 1
-                              Text(
-                                'Phone Number 1',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _phoneNumber1Controller,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Phone Number 1',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                keyboardType: TextInputType.phone,
-                                onChanged: (value) {
-                                  // Implement phone number formatting if needed
-                                },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Phone number is required';
-                                  }
-                                  // Simple phone number validation
-                                  if (!RegExp(r'^\+?\d{7,15}$')
-                                      .hasMatch(value)) {
-                                    return 'Enter a valid phone number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Fax
-                              Text(
-                                'Fax',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _faxController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Fax Number',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                keyboardType: TextInputType.phone,
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Type (New Field)
-                              Text(
-                                'Type',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              DropdownButtonFormField<String>(
-                                value: _selectedType,
-                                items: [
-                                  DropdownMenuItem(
-                                    value: '---',
-                                    child: Text(
-                                      '---',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Dentist',
-                                    child: Text(
-                                      'Dentist',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Denturist',
-                                    child: Text(
-                                      'Denturist',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Lab',
-                                    child: Text(
-                                      'Lab',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    _selectedType = newValue!;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                style: TextStyle(color: Colors.white),
-                                dropdownColor: Colors.grey[800],
-                                validator: (value) {
-                                  if (value == null || value == '---') {
-                                    return 'Please select a valid type';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // City
-                              Text(
-                                'City',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _cityController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'City',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Country
-                              Text(
-                                'Country',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _countryController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Country',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                        // Right Column
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Last Name
-                              Text(
-                                'Last Name',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _lastNameController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Last Name',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Last name is required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Email
-                              Text(
-                                'Email',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _emailController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Email',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Email is required';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Enter a valid email';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Secondary Phone Number
-                              Text(
-                                'Secondary Phone Number',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _secondaryPhoneController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Secondary Phone Number',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                keyboardType: TextInputType.phone,
-                                onChanged: (value) {
-                                  // Implement phone number formatting if needed
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Address with Autocomplete
-                              Text(
-                                'Address',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TypeAheadFormField(
-                                textFieldConfiguration: TextFieldConfiguration(
-                                  controller: _addressController,
+                        // First Row: First Name & Last Name
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'First Name',
+                                field: TextFormField(
+                                  controller: _firstNameController,
                                   style: TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
-                                    hintText: 'Address',
-                                    hintStyle: TextStyle(color: Colors.white54),
+                                    hintText: 'First Name',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
                                     filled: true,
                                     fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8.0),
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'First name is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Last Name',
+                                field: TextFormField(
+                                  controller: _lastNameController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Last Name',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Last name is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Second Row: Company Name & Email
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Company Name',
+                                field: TextFormField(
+                                  controller: _companyNameController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Company Name',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if ((_firstNameController.text.isEmpty ||
+                                            _lastNameController.text.isEmpty) &&
+                                        (value == null || value.isEmpty)) {
+                                      return 'Company name is required if first or last name is missing';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Email',
+                                field: TextFormField(
+                                  controller: _emailController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Email',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Email is required';
+                                    }
+                                    if (!value.contains('@')) {
+                                      return 'Enter a valid email';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Third Row: Phone Number 1 & Secondary Phone Number
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Phone Number 1',
+                                field: TextFormField(
+                                  controller: _phoneNumber1Controller,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Phone Number 1',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                  onChanged: (value) {
+                                    // Implement phone number formatting if needed
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Phone number is required';
+                                    }
+                                    // Simple phone number validation
+                                    if (!RegExp(r'^\+?\d{7,15}$')
+                                        .hasMatch(value)) {
+                                      return 'Enter a valid phone number';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Secondary Phone Number',
+                                field: TextFormField(
+                                  controller: _secondaryPhoneController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Secondary Phone Number',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                  onChanged: (value) {
+                                    // Implement phone number formatting if needed
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Fourth Row: Fax & Address
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Fax',
+                                field: TextFormField(
+                                  controller: _faxController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Fax Number',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Address',
+                                field: TypeAheadFormField(
+                                  textFieldConfiguration:
+                                      TextFieldConfiguration(
+                                    controller: _addressController,
+                                    style: TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: 'Address',
+                                      hintStyle: TextStyle(
+                                          color: Colors.white54),
+                                      filled: true,
+                                      fillColor: Colors.grey[800],
+                                      helperText:
+                                          ' ', // Reserve space for error
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                    ),
+                                  ),
+                                  suggestionsCallback: (pattern) {
+                                    return _getAddressSuggestions(pattern);
+                                  },
+                                  itemBuilder:
+                                      (context, String suggestion) {
+                                    return ListTile(
+                                      title: Text(
+                                        suggestion,
+                                        style: TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    );
+                                  },
+                                  onSuggestionSelected:
+                                      (String suggestion) {
+                                    _addressController.text = suggestion;
+                                    // Auto-fill related fields based on the selected address
+                                    // For demonstration, we'll mock the data
+                                    setState(() {
+                                      _cityController.text =
+                                          'Sample City';
+                                      _provinceController.text =
+                                          'Sample Province';
+                                      _countryController.text =
+                                          'Sample Country';
+                                      _postalCodeController.text = '12345';
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Address is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Fifth Row: Type (Dropdown) & Province/State
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Type',
+                                field: DropdownButtonFormField<String>(
+                                  value: _selectedType,
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: '---',
+                                      child: Text(
+                                        '---',
+                                        style:
+                                            TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Dentist',
+                                      child: Text(
+                                        'Dentist',
+                                        style:
+                                            TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Denturist',
+                                      child: Text(
+                                        'Denturist',
+                                        style:
+                                            TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Lab',
+                                      child: Text(
+                                        'Lab',
+                                        style:
+                                            TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _selectedType = newValue!;
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  style:
+                                      TextStyle(color: Colors.white),
+                                  dropdownColor: Colors.grey[800],
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value == '---') {
+                                      return 'Please select a valid type';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Province/State',
+                                field: TextFormField(
+                                  controller: _provinceController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Province/State',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
                                       borderSide: BorderSide.none,
                                     ),
                                   ),
                                 ),
-                                suggestionsCallback: (pattern) {
-                                  return _getAddressSuggestions(pattern);
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Sixth Row: City & Postal Code
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'City',
+                                field: TextFormField(
+                                  controller: _cityController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'City',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Postal Code',
+                                field: TextFormField(
+                                  controller: _postalCodeController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Postal Code',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.isEmpty) {
+                                      return 'Postal code is required';
+                                    }
+                                    // Simple postal code validation
+                                    if (!RegExp(r'^\d{4,10}$')
+                                        .hasMatch(value)) {
+                                      return 'Enter a valid postal code';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Seventh Row: Country & Statement Delivery Method
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormField(
+                                label: 'Country',
+                                field: TextFormField(
+                                  controller: _countryController,
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Country',
+                                    hintStyle:
+                                        TextStyle(color: Colors.white54),
+                                    filled: true,
+                                    fillColor: Colors.grey[800],
+                                    helperText:
+                                        ' ', // Reserve space for error
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: FormField<String>(
+                                validator: (value) {
+                                  if (_statementDeliveryMethod ==
+                                          null ||
+                                      _statementDeliveryMethod!
+                                          .isEmpty) {
+                                    return 'Please select a statement delivery method';
+                                  }
+                                  return null;
                                 },
-                                itemBuilder: (context, suggestion) {
-                                  return ListTile(
-                                    title: Text(
-                                      suggestion,
-                                      style: TextStyle(color: Colors.black),
+                                builder:
+                                    (FormFieldState<String> state) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                        bottom: 10.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Statement Delivery Method',
+                                          style: TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                        SizedBox(height: 5),
+                                        Row(
+                                          children: [
+                                            // Email Radio Button
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  Radio<String>(
+                                                    value: 'Email',
+                                                    groupValue:
+                                                        _statementDeliveryMethod,
+                                                    onChanged:
+                                                        (String? value) {
+                                                      setState(() {
+                                                        _statementDeliveryMethod =
+                                                            value;
+                                                      });
+                                                      state.didChange(value);
+                                                    },
+                                                    activeColor:
+                                                        Colors.deepPurpleAccent,
+                                                  ),
+                                                  Text(
+                                                    'Email',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Printed Paper Radio Button
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  Radio<String>(
+                                                    value: 'Printed Paper',
+                                                    groupValue:
+                                                        _statementDeliveryMethod,
+                                                    onChanged:
+                                                        (String? value) {
+                                                      setState(() {
+                                                        _statementDeliveryMethod =
+                                                            value;
+                                                      });
+                                                      state.didChange(value);
+                                                    },
+                                                    activeColor:
+                                                        Colors.deepPurpleAccent,
+                                                  ),
+                                                  Text(
+                                                    'Printed Paper',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Display validation error if any
+                                        if (state.hasError)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 16.0),
+                                            child: Text(
+                                              state.errorText!,
+                                              style: TextStyle(
+                                                color: Colors.red[700],
+                                                fontSize: 12.0,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   );
                                 },
-                                onSuggestionSelected: (suggestion) {
-                                  _addressController.text = suggestion;
-                                  // Auto-fill related fields based on the selected address
-                                  // For demonstration, we'll mock the data
-                                  setState(() {
-                                    _cityController.text = 'Sample City';
-                                    _provinceController.text =
-                                        'Sample Province';
-                                    _countryController.text = 'Sample Country';
-                                    _postalCodeController.text = '12345';
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Address is required';
-                                  }
-                                  return null;
-                                },
                               ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Province/State
-                              Text(
-                                'Province/State',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _provinceController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Province/State',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-
-                              // Postal Code
-                              Text(
-                                'Postal Code',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 5),
-                              TextFormField(
-                                controller: _postalCodeController,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Postal Code',
-                                  hintStyle: TextStyle(color: Colors.white54),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Postal code is required';
-                                  }
-                                  // Simple postal code validation
-                                  if (!RegExp(r'^\d{4,10}$').hasMatch(value)) {
-                                    return 'Enter a valid postal code';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20), // Increased bottom margin
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+
                     // Additional Info
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 10.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Additional Info',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          SizedBox(height: 5),
-                          TextFormField(
-                            controller: _additionalInfoController,
-                            style: TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Enter additional information here...',
-                              hintStyle: TextStyle(color: Colors.white54),
-                              filled: true,
-                              fillColor: Colors.grey[800],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide.none,
-                              ),
+                          horizontal: 0.0, vertical: 5.0),
+                      child: _buildFormField(
+                        label: 'Additional Info',
+                        field: TextFormField(
+                          controller: _additionalInfoController,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Enter additional information here...',
+                            hintStyle:
+                                TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: Colors.grey[800],
+                            helperText:
+                                ' ', // Reserve space for error
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(8.0),
+                              borderSide: BorderSide.none,
                             ),
-                            maxLines: 1, // Reduced to one line
                           ),
-                          SizedBox(
-                              height:
-                                  20), // Added space to accommodate error messages
-                        ],
+                          maxLines: 1, // Reduced to one line
+                        ),
                       ),
                     ),
-                    // Create Customer Button with hover effects
+
+                    // Create Customer Button with enhanced styling
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 10.0),
+                          horizontal: 0.0, vertical: 10.0),
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: MouseRegion(
@@ -667,30 +850,52 @@ class _AddCustomerState extends State<AddCustomer> {
                               _isCreateButtonHovered = false;
                             });
                           },
-                          child: AnimatedScale(
-                            scale: _isCreateButtonHovered
-                                ? 1.05
-                                : 1.0, // Slightly larger on hover
+                          child: AnimatedContainer(
                             duration: Duration(milliseconds: 200),
-                            child: ElevatedButton(
+                            decoration: BoxDecoration(
+                              boxShadow: _isCreateButtonHovered
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.deepPurpleAccent
+                                            .withOpacity(0.6),
+                                        spreadRadius: 2,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ]
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.transparent,
+                                      ),
+                                    ],
+                              borderRadius:
+                                  BorderRadius.circular(12.0),
+                            ),
+                            child: ElevatedButton.icon(
                               onPressed: _submitForm,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.deepPurple, // Button color
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 12),
-                                textStyle: TextStyle(
-                                  fontSize: _isCreateButtonHovered
-                                      ? 18
-                                      : 16, // Increase font size on hover
-                                  fontWeight: FontWeight.bold,
+                              icon: Icon(
+                                Icons.person_add,
+                                color: Colors.white,
                                 ),
-                              ),
-                              child: Text(
+                              label: Text(
                                 'Create Customer',
                                 style: TextStyle(
-                                    color: Colors
-                                        .white), // Set text color to white
+                                  fontSize: 18, // Increased font size
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isCreateButtonHovered
+                                    ? Colors.deepPurpleAccent
+                                    : Colors.deepPurple, // Dynamic color
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 16), // Larger padding
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12.0),
+                                ),
+                                elevation: 5, // Added elevation
                               ),
                             ),
                           ),
@@ -702,8 +907,8 @@ class _AddCustomerState extends State<AddCustomer> {
               ),
             ),
           ],
-        ),
-      ),
+        )
+      )
     );
-  }
-}
+      }
+    }
