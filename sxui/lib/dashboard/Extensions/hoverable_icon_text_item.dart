@@ -1,5 +1,8 @@
+// File: lib/Extensions/hoverable_icon_text_item.dart
+// Author: Will
+// Version: 1.1
+// Revised: 06-10-2024
 import 'package:flutter/material.dart';
-import '../constants.dart';
 
 class HoverableIconTextItem extends StatefulWidget {
   final IconData icon;
@@ -60,7 +63,8 @@ class _HoverableIconTextItemState extends State<HoverableIconTextItem> {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 color: _isHovered ? widget.hoverTextColor : widget.textColor,
-                fontSize: _isHovered ? widget.hoverTextFontSize : widget.textFontSize,
+                fontSize:
+                    _isHovered ? widget.hoverTextFontSize : widget.textFontSize,
                 fontWeight: FontWeight.bold,
               ),
               child: Text(widget.text),
@@ -77,4 +81,3 @@ class _HoverableIconTextItemState extends State<HoverableIconTextItem> {
     });
   }
 }
-

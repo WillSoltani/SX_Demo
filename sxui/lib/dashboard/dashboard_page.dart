@@ -1,6 +1,10 @@
+// File: lib/dashboard/dashboard_page
+// Author: Will 
+// Version: 1.1
+// Revised: 06-10-2024
 import 'package:flutter/material.dart';
 import 'Widgits/Billing/Billing.dart';
-import 'MainDashboard/mainDash_Widgit.dart';
+import './MainDashboard/mainDash_Widget.dart'; // Adjusted path
 import 'Widgits/Setting/setting.dart';
 import 'Widgits/SalesSummary/salesSum.dart';
 import 'Widgits/Search/search.dart';
@@ -12,9 +16,9 @@ import 'Widgits/Integrations/Integrations.dart';
 import 'Widgits/Drivers/driverSum.dart';
 import 'Widgits/Calendar/calendar.dart';
 import 'Widgits/Log/log.dart';
-import 'Extensions/advanced_calendar.dart';
-import 'constants.dart';
-import 'dashboard_page.dart';
+import 'MainDashboard/Subs/add_customer.dart';
+import 'models/tab_item.dart';
+import 'Extensions/tab_properties.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -37,146 +41,314 @@ class DashboardPageState extends State<DashboardPage> {
   static const int bottomMarginFlex = 2;
 
   // Log messages notifier
-  final ValueNotifier<List<Map<String, dynamic>>> logMessages = ValueNotifier<List<Map<String, dynamic>>>([]);
+  final ValueNotifier<List<Map<String, dynamic>>> logMessages =
+      ValueNotifier<List<Map<String, dynamic>>>([]);
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.black,
-    body: Column(
-      children: [
-        // Top Margin
-        Expanded(flex: topMarginFlex, child: SizedBox()),
-        // Main Content Row
-        Expanded(
-          flex: firstRowFlex,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  // Tab management
+  List<TabItem> openTabs = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Existing body content
+          Column(
             children: [
-              // Left Margin
-              Expanded(flex: leftMarginFlex, child: SizedBox()),
-              // First Column (x1, x2, x3)
+              // Top Margin
+              Expanded(flex: topMarginFlex, child: SizedBox()),
+              // Main Content Row
               Expanded(
-                flex: firstBoxFlex,
-                child: Column(
+                flex: firstRowFlex,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Box x1
+                    // Left Margin
+                    Expanded(flex: leftMarginFlex, child: SizedBox()),
+                    // First Column (x1, x2, x3)
                     Expanded(
-                      flex: 4,
-                      child: BoxX1(),
-                    ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Box x2
-                    Expanded(
-                      flex: 8,
-                      child: BoxX2(logMessages: logMessages),
-                    ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Box x3
-                    Expanded(
-                      flex: 3,
-                      child: BoxX3(),
-                    ),
-                  ],
-                ),
-              ),
-              // Margin between boxes
-              Expanded(flex: boxMarginFlex, child: SizedBox()),
-              // Second Column (x4, x5, x6, x7, x8, x9)
-              Expanded(
-                flex: secondBoxFlex,
-                child: Column(
-                  children: [
-                    // Box x4
-                    Expanded(
-                      flex: 2,
-                      child: BoxX4(),
-                    ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Box x5
-                    Expanded(
-                      flex: 2,
-                      child: BoxX5(),
-                    ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Boxes x6 and x7 in a row
-                    Expanded(
-                      flex: 5,
-                      child: Row(
+                      flex: firstBoxFlex,
+                      child: Column(
                         children: [
-                          Expanded(child: BoxX6(logMessages: logMessages)),
-                          SizedBox(width: 8),
-                          Expanded(child: BoxX7(logMessages: logMessages)),
+                          // Box x1
+                          Expanded(
+                            flex: 4,
+                            child: BoxX1(),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Box x2 - MainDashWidget
+                          Expanded(
+                            flex: 8,
+                            child: MainDashWidget(
+                              logMessages: logMessages,
+                              onOpenTab: _openTab,
+                              onCloseTab: _closeTab,
+                            ),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Box x3
+                          Expanded(
+                            flex: 3,
+                            child: BoxX3(),
+                          ),
                         ],
                       ),
                     ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Boxes x8 and x9 in a row
+                    // Margin between boxes
+                    Expanded(flex: boxMarginFlex, child: SizedBox()),
+                    // Second Column (x4, x5, x6, x7, x8, x9)
                     Expanded(
-                      flex: 5,
-                      child: Row(
+                      flex: secondBoxFlex,
+                      child: Column(
                         children: [
-                          Expanded(child: BoxX8(logMessages: logMessages)),
-                          SizedBox(width: 8),
-                          Expanded(child: BoxX9(logMessages: logMessages)),
+                          // Box x4
+                          Expanded(
+                            flex: 2,
+                            child: BoxX4(),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Box x5
+                          Expanded(
+                            flex: 2,
+                            child: BoxX5(),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Boxes x6 and x7 in a row
+                          Expanded(
+                            flex: 5,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: BoxX6(logMessages: logMessages),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: BoxX7(logMessages: logMessages),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Boxes x8 and x9 in a row
+                          Expanded(
+                            flex: 5,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: BoxX8(logMessages: logMessages),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: BoxX9(logMessages: logMessages),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              // Margin between boxes
-              Expanded(flex: boxMarginFlex, child: SizedBox()),
-              // Third Column (x10, x11, x12, x13)
-              Expanded(
-                flex: thirdBoxFlex,
-                child: Column(
-                  children: [
-                    // Box x10
+                    // Margin between boxes
+                    Expanded(flex: boxMarginFlex, child: SizedBox()),
+                    // Third Column (x10, x11, x12, x13)
                     Expanded(
-                      flex: 3,
-                      child: BoxX10(),
-                    ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Box x11 and x12 in a row
-                    Expanded(
-                      flex: 4,
-                      child: Row(
+                      flex: thirdBoxFlex,
+                      child: Column(
                         children: [
-                          Expanded(child: BoxX11()),
-                          SizedBox(width: 8),
-                          Expanded(child: BoxX12(logMessages: logMessages)),
+                          // Box x10
+                          Expanded(
+                            flex: 3,
+                            child: BoxX10(),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Box x11 and x12 in a row
+                          Expanded(
+                            flex: 4,
+                            child: Row(
+                              children: [
+                                Expanded(child: BoxX11()),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: BoxX12(logMessages: logMessages),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Spacer
+                          Expanded(flex: 1, child: SizedBox()),
+                          // Box x13
+                          Expanded(
+                            flex: 8,
+                            child: BoxX13(logMessages: logMessages),
+                          ),
                         ],
                       ),
                     ),
-                    // Spacer
-                    Expanded(flex: 1, child: SizedBox()),
-                    // Box x13
-                    Expanded(
-                      flex: 8,
-                      child: BoxX13(logMessages: logMessages),
-                    ),
+                    // Right Margin
+                    Expanded(flex: rightMarginFlex, child: SizedBox()),
                   ],
                 ),
               ),
-              // Right Margin
-              Expanded(flex: rightMarginFlex, child: SizedBox()),
+              // Bottom Margin
+              Expanded(flex: bottomMarginFlex, child: SizedBox()),
+            ],
+          ),
+          // Open tabs
+// Open tabs
+          ...openTabs.map((tab) {
+            return Offstage(
+              offstage: tab.isMinimized,
+              child: Material(
+                color: Colors.transparent,
+                child: TabProperties(
+                  key: ValueKey(tab.id),
+                  title: tab.title,
+                  onClose: () {
+                    _closeTab(tab.id);
+                  },
+                  onMinimize: () {
+                    _minimizeTab(tab.id);
+                  },
+                  child: tab.content,
+                ),
+              ),
+            );
+          }).toList(),
+
+          // Minimized tabs bar
+          if (openTabs.any((tab) => tab.isMinimized))
+            Positioned(
+              bottom: 10,
+              left: 10,
+              child: _buildMinimizedTabsBar(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Tab management methods
+  void _openTab(TabItem tab) {
+    setState(() {
+      openTabs.add(tab);
+    });
+  }
+
+  void _closeTab(String tabId) {
+    setState(() {
+      openTabs.removeWhere((tab) => tab.id == tabId);
+    });
+  }
+
+  void _minimizeTab(String tabId) {
+    setState(() {
+      openTabs.firstWhere((tab) => tab.id == tabId).isMinimized = true;
+    });
+  }
+
+  void _restoreTab(String tabId) {
+    setState(() {
+      openTabs.firstWhere((tab) => tab.id == tabId).isMinimized = false;
+    });
+  }
+
+  void _resizeTab(String tabId) {
+    setState(() {
+      TabItem tab = openTabs.firstWhere((tab) => tab.id == tabId);
+      tab.isMaximized = !tab.isMaximized; // Toggle maximized state
+    });
+  }
+
+  Widget _buildMinimizedTabsBar() {
+    List<TabItem> minimizedTabs =
+        openTabs.where((tab) => tab.isMinimized).toList();
+
+    if (minimizedTabs.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 5,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width *
+            0.5, // Max width is 50% of screen
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: minimizedTabs.map((tab) {
+            return _buildMinimizedTabButton(tab);
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMinimizedTabButton(TabItem tab) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() {
+          tab.isHovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          tab.isHovered = false;
+        });
+      },
+      child: GestureDetector(
+        onTap: () {
+          _restoreTab(tab.id);
+        },
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          margin: EdgeInsets.symmetric(horizontal: 2),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: tab.isHovered ? Colors.grey[600] : Colors.grey[700],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tab.title,
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  _closeTab(tab.id);
+                },
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Colors.white70,
+                ),
+              ),
             ],
           ),
         ),
-        // Bottom Margin
-        Expanded(flex: bottomMarginFlex, child: SizedBox()),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
-
-}
-
-

@@ -1,3 +1,7 @@
+// File: lib/Extensions/hoverable_text_item.dart
+// Author: Will
+// Version: 1.1
+// Revised: 06-10-2024
 import 'package:flutter/material.dart';
 import '../constants.dart';
 
@@ -7,14 +11,35 @@ class HoverableTextItem extends StatefulWidget {
   final VoidCallback onTap;
   final double fontSize;
   final double hoverFontSize;
+  final Color normalColor;
+  final Color hoverColor;
+  final Color hoverBackgroundColor;
+  final Color splashColor;
+  final EdgeInsets padding;
+  final TextAlign textAlign;
+  final FontWeight fontWeight;
+  final Duration animationDuration;
+  final bool autofocus;
+  final FocusNode? focusNode;
 
   const HoverableTextItem({
+    Key? key,
     required this.text,
     required this.onTap,
     this.icon,
     this.fontSize = 18.0,
     this.hoverFontSize = 22.0,
-    Key? key,
+    this.normalColor = Colors.white,
+    this.hoverColor =
+        darkPurple, // Assuming darkPurple is defined in constants.dart
+    this.hoverBackgroundColor = Colors.grey,
+    this.splashColor = Colors.grey,
+    this.padding = const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+    this.textAlign = TextAlign.left,
+    this.fontWeight = FontWeight.bold,
+    this.animationDuration = const Duration(milliseconds: 200),
+    this.autofocus = false,
+    this.focusNode,
   }) : super(key: key);
 
   @override
@@ -24,45 +49,56 @@ class HoverableTextItem extends StatefulWidget {
 class _HoverableTextItemState extends State<HoverableTextItem> {
   bool _isHovered = false;
 
-  static const Color normalColor = Colors.white;
-  static const Color hoverColor = darkPurple; // Imported from constants.dart
+  void _handleHover(bool isHovered) {
+    setState(() {
+      _isHovered = isHovered;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final color = _isHovered ? hoverColor : normalColor;
+    final color = _isHovered ? widget.hoverColor : widget.normalColor;
+    final fontSize = _isHovered ? widget.hoverFontSize : widget.fontSize;
 
-    return Expanded(
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => _onHover(true),
-        onExit: (_) => _onHover(false),
-        child: GestureDetector(
+    return Semantics(
+      button: true,
+      label: widget.text,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           onTap: widget.onTap,
+          onHover: _handleHover,
+          hoverColor: widget.hoverBackgroundColor.withOpacity(0.1),
+          splashColor: widget.splashColor.withOpacity(0.2),
+          focusColor: widget.hoverBackgroundColor.withOpacity(0.1),
+          autofocus: widget.autofocus,
+          focusNode: widget.focusNode,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-            color: _isHovered ? Colors.grey[600] : Colors.transparent,
+            duration: widget.animationDuration,
+            padding: widget.padding,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              textDirection: Directionality.of(context),
               children: [
-                if (widget.icon != null)
+                if (widget.icon != null) ...[
                   Icon(
                     widget.icon,
                     color: color,
-                    size: widget.fontSize + 4,
+                    size: fontSize + 4,
                   ),
-                if (widget.icon != null) SizedBox(width: 12),
+                  SizedBox(width: 12),
+                ],
                 Expanded(
                   child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
+                    duration: widget.animationDuration,
                     style: TextStyle(
                       color: color,
-                      fontSize: _isHovered ? widget.hoverFontSize : widget.fontSize,
-                      fontWeight: FontWeight.bold,
+                      fontSize: fontSize,
+                      fontWeight: widget.fontWeight,
                     ),
                     child: Text(
                       widget.text,
-                      textAlign: TextAlign.left,
+                      textAlign: widget.textAlign,
                     ),
                   ),
                 ),
@@ -73,11 +109,4 @@ class _HoverableTextItemState extends State<HoverableTextItem> {
       ),
     );
   }
-
-  void _onHover(bool isHovered) {
-    setState(() {
-      _isHovered = isHovered;
-    });
-  }
 }
-
