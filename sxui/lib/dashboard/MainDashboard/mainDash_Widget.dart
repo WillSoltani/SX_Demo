@@ -1,8 +1,8 @@
 // File: lib/MainDashboard/mainDash_widget.dart
 
 // Author: Will
-// Version: 1.1
-// Revised: 06-10-2024
+// Version: 1.2
+// Revised: 07-10-2024
 
 // This widget, MainDashWidget, displays the main dashboard section with options like 'Customers', 'Emails',
 // 'Reports', 'Operations', and 'More'. It maintains the original title and logo design, adds improved animations,
@@ -11,9 +11,9 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // For generating unique IDs
 import '../MainDashboard/Subs/add_customer.dart';
+import '../MainDashboard/Subs/view_customer_profile.dart';
 import '../Extensions/dashboard_box.dart';
 import '../Extensions/hoverable_text_item.dart';
-import '../Extensions/hoverable_expanded_item.dart';
 import '../models/sub_item.dart';
 import '../constants.dart';
 import '../../pages/sub_item_page.dart';
@@ -224,9 +224,78 @@ class _MainDashWidgetState extends State<MainDashWidget>
   void _onSubItemTap(SubItem item) {
     if (item.title == 'Add Customer' && selectedMainItem == 'Customers') {
       _openAddCustomerTab();
+    } else if (item.title == 'View Customer Profile' &&
+        selectedMainItem == 'Customers') {
+      _openViewCustomerProfileTab();
     } else {
       _navigateToSubItemPage(item);
     }
+  }
+
+  void _openViewCustomerProfileTab() {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: 'View Customer Profile',
+      content: ViewCustomerProfile(
+        logMessages: widget.logMessages,
+        onClose: () {
+          widget.onCloseTab(tabId); // Notify the parent to close the tab
+        },
+        onOpenTab: _openCustomerDetailTab, // Pass the callback here
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
+  }
+
+  void _openAddCustomerTab() {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: 'Add Customer',
+      content: AddCustomer(
+        logMessages: widget.logMessages,
+        onClose: () {
+          widget.onCloseTab(tabId); // Notify the parent to close the tab
+        },
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
+  }
+
+  void _navigateToSubItemPage(SubItem item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SubItemPage(subItem: item.title),
+      ),
+    );
+  }
+
+  /// Callback function to open a new tab with the customer's name centered
+  void _openCustomerDetailTab(String customerName) {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: customerName,
+      content: Center(
+        child: Text(
+          customerName,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 32.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
   }
 
   List<SubItem> _getMainItems() {
@@ -285,32 +354,6 @@ class _MainDashWidgetState extends State<MainDashWidget>
       default:
         return [];
     }
-  }
-
-  void _openAddCustomerTab() {
-    String tabId = Uuid().v4();
-    TabItem newTab = TabItem(
-      id: tabId,
-      title: 'Add Customer',
-      content: AddCustomer(
-        logMessages: widget.logMessages,
-        onClose: () {
-          widget.onCloseTab(tabId); // Notify the parent to close the tab
-        },
-      ),
-    );
-
-    // Use the callback to open the tab
-    widget.onOpenTab(newTab);
-  }
-
-  void _navigateToSubItemPage(SubItem item) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubItemPage(subItem: item.title),
-      ),
-    );
   }
 }
 
