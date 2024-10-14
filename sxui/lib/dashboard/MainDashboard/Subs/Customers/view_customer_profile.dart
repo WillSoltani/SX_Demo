@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:faker/faker.dart'; // For generating realistic dummy data
 import 'dart:math'; // For Random class
-import '../../constants.dart'; // Adjust the path as necessary
+import '../../../constants.dart'; // Adjust the path as necessary
 import 'dart:async'; // For Timer (debouncing)
 
 class ViewCustomerProfile extends StatefulWidget {

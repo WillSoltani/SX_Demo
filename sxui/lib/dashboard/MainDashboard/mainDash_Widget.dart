@@ -1,7 +1,7 @@
 // File: lib/MainDashboard/mainDash_widget.dart
 
 // Author: Will
-// Version: 1.2
+// Version: 1.3
 // Revised: 07-10-2024
 
 // This widget, MainDashWidget, displays the main dashboard section with options like 'Customers', 'Emails',
@@ -10,14 +10,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // For generating unique IDs
-import '../MainDashboard/Subs/add_customer.dart';
-import '../MainDashboard/Subs/view_customer_profile.dart';
+import 'Subs/Customers/add_customer.dart';
+import 'Subs/Customers/view_customer_profile.dart';
 import '../Extensions/dashboard_box.dart';
 import '../Extensions/hoverable_text_item.dart';
 import '../models/sub_item.dart';
 import '../constants.dart';
 import '../../pages/sub_item_page.dart';
 import '../models/tab_item.dart';
+// Import your updated InventoryManagement widget
+import 'Subs/Operations/inventory.dart';
+import 'Subs/Operations/add_product.dart'; // Adjust the path as necessary
+
 
 class MainDashWidget extends StatefulWidget {
   final ValueNotifier<List<Map<String, dynamic>>> logMessages;
@@ -227,9 +231,71 @@ class _MainDashWidgetState extends State<MainDashWidget>
     } else if (item.title == 'View Customer Profile' &&
         selectedMainItem == 'Customers') {
       _openViewCustomerProfileTab();
+    } else if (item.title == 'Inventory Management' &&
+        selectedMainItem == 'Operations') {
+      _openInventoryManagementTab();
     } else {
       _navigateToSubItemPage(item);
     }
+  }
+
+void _openInventoryManagementTab() {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: 'Inventory Management',
+      content: InventoryManagement(
+        logMessages: widget.logMessages,
+        onClose: () {
+          widget.onCloseTab(tabId); // Notify the parent to close the tab
+        },
+        onOpenTab: _openProductDetailTab, // Existing callback
+        onAddProduct: _openAddProductTab, // New callback
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
+  }
+
+  void _openAddProductTab() {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: 'Add Product',
+      content: AddProduct(
+        logMessages: widget.logMessages,
+        onClose: () {
+          widget.onCloseTab(tabId); // Notify the parent to close the tab
+        },
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
+  }
+
+
+
+  void _openProductDetailTab(String productId) {
+    String tabId = Uuid().v4();
+    TabItem newTab = TabItem(
+      id: tabId,
+      title: productId,
+      content: Center(
+        child: Text(
+          'Product ID: $productId',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 32.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+
+    // Use the callback to open the tab
+    widget.onOpenTab(newTab);
   }
 
   void _openViewCustomerProfileTab() {
