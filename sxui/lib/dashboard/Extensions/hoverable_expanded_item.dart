@@ -1,13 +1,15 @@
 // File: lib/Extensions/hoverable_expanded_item.dart
+
 // Author: Will
-// Version: 1.0
-// Revised: 06-10-2024
+// Version: 1.1
+// Revised: 07-10-2024
 
 import 'package:flutter/material.dart';
 import '../constants.dart';
 
 class HoverableExpandedItem extends StatefulWidget {
   final String text;
+  final IconData? icon; // Added optional icon parameter
   final VoidCallback onTap;
   final double fontSize;
   final double hoverFontSize;
@@ -26,11 +28,11 @@ class HoverableExpandedItem extends StatefulWidget {
   const HoverableExpandedItem({
     Key? key,
     required this.text,
+    this.icon, // Accept icon
     required this.onTap,
     this.fontSize = 32.0,
     this.hoverFontSize = 36.0,
-    this.normalColor =
-        darkPurple, // Assuming darkPurple is defined in constants.dart
+    this.normalColor = darkPurple,
     this.hoverColor = Colors.white,
     this.fontWeight = FontWeight.bold,
     this.hoverFontWeight = FontWeight.bold,
@@ -85,9 +87,22 @@ class _HoverableExpandedItemState extends State<HoverableExpandedItem> {
                 fontSize: fontSize,
                 fontWeight: fontWeight,
               ),
-              child: Text(
-                widget.text,
-                textAlign: widget.textAlign,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.icon != null) ...[
+                    Icon(
+                      widget.icon,
+                      color: color,
+                      size: fontSize,
+                    ),
+                    SizedBox(width: 8.0),
+                  ],
+                  Text(
+                    widget.text,
+                    textAlign: widget.textAlign,
+                  ),
+                ],
               ),
             ),
           ),

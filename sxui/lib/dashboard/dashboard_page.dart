@@ -16,7 +16,7 @@ import 'Widgits/Integrations/Integrations.dart';
 import 'Widgits/Drivers/driverSum.dart';
 import 'Widgits/Calendar/calendar.dart';
 import 'Widgits/Log/log.dart';
-import 'MainDashboard/Subs/add_customer.dart';
+import 'MainDashboard/Subs/Customers/add_customer.dart';
 import 'models/tab_item.dart';
 import 'Extensions/tab_properties.dart';
 
