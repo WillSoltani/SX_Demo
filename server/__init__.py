@@ -11,8 +11,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import jwt
 
-import server.DB as DB
-import server.REST as REST
+
 
 app = Flask('server', static_folder='static')
 
@@ -59,8 +58,11 @@ def setup_app():
     necessary setups for the app to function.
     '''
     with app.app_context():
+        import server.DB as DB
         DB.init()
         DB.teardown()
+        import server.REST as REST
+
         REST.init()
         setup_tokenization()
 

@@ -11,7 +11,7 @@ import server.DB.sxuser as user
 
 bp = Blueprint("auth", __name__, url_prefix='/auth')
 
-@bp.route("/signin", method=['POST'])
+@bp.route("/signin", methods=['POST'])
 def signin():
     '''
     This method gets invoked when the user
@@ -30,7 +30,7 @@ def signin():
         json_req['password']
     )
 
-@bp.route("/signup", method=['POST'])
+@bp.route("/signup", methods=['POST'])
 def signup():
     '''
     This method gets invoked when users try
