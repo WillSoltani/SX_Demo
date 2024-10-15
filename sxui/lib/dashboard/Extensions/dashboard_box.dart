@@ -1,3 +1,6 @@
+// Author: Will
+// Version: 1.0
+// Revised: 06-10-2024
 import 'package:flutter/material.dart';
 
 class DashboardBox extends StatelessWidget {
@@ -24,4 +27,3 @@ class DashboardBox extends StatelessWidget {
     );
   }
 }
-
