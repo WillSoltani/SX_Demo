@@ -8,11 +8,11 @@ Last revised: 9/24/24
 '''
 
 from flask import current_app
-import server.REST.auth as auth
 
 
 def init():
     '''
     A method for initializing all of the blueprints.
     '''
+    import server.REST.auth as auth
     current_app.register_blueprint(auth.bp)
