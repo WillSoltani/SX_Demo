@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sxui/Old%20Files/dashboardFull.dart';
+import 'package:sxui/ServerCommunicator/SXServerLogin.dart';
 //import 'dashboard.dart'; // Import your DashboardPage
 
 class LoginPage extends StatefulWidget {
@@ -9,6 +11,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool isOnLeft = true; // Track if the rectangle is on the left or right side
   String userType = 'client'; // Track the selected user type
+  String ipAddress = ''; // Variable to store IP address
+  String port = ''; // Variable to store Port number
+  String username = '';
+  String password = '';
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +86,8 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         side: BorderSide(color: Colors.white, width: 2),
-                        padding: EdgeInsets.symmetric(horizontal: 120, vertical: 30),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 120, vertical: 30),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -138,7 +145,8 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         side: BorderSide(color: Colors.white, width: 2),
-                        padding: EdgeInsets.symmetric(horizontal: 120, vertical: 30),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 120, vertical: 30),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -183,54 +191,48 @@ class _LoginPageState extends State<LoginPage> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 40),
-          // Radio Buttons for User Type
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    userType = 'client';
-                  });
-                },
-                child: Row(
-                  children: [
-                    Radio(
-                      value: 'client',
-                      groupValue: userType,
-                      onChanged: (value) {
-                        setState(() {
-                          userType = value.toString();
-                        });
-                      },
-                    ),
-                    Text('Client', style: TextStyle(fontSize: 20)),
-                  ],
+          // IP Address TextField
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.network_check, size: 24),
+                hintText: 'Enter IP Address',
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
                 ),
               ),
-              SizedBox(width: 20),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    userType = 'admin';
-                  });
-                },
-                child: Row(
-                  children: [
-                    Radio(
-                      value: 'admin',
-                      groupValue: userType,
-                      onChanged: (value) {
-                        setState(() {
-                          userType = value.toString();
-                        });
-                      },
-                    ),
-                    Text('Administrator', style: TextStyle(fontSize: 20)),
-                  ],
+              onChanged: (value) {
+                setState(() {
+                  ipAddress = value;
+                });
+              },
+            ),
+          ),
+          SizedBox(height: 20),
+          // Port TextField
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.usb, size: 24),
+                hintText: 'Enter Port',
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
                 ),
               ),
-            ],
+              onChanged: (value) {
+                setState(() {
+                  port = value;
+                });
+              },
+            ),
           ),
           SizedBox(height: 20),
           // Username TextField
@@ -247,9 +249,14 @@ class _LoginPageState extends State<LoginPage> {
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  username = value;
+                });
+              },
             ),
           ),
-          SizedBox(height: 20),
+
           // Password TextField
           SizedBox(
             width: MediaQuery.of(context).size.width * 0.4,
@@ -265,6 +272,11 @@ class _LoginPageState extends State<LoginPage> {
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  password = value;
+                });
+              },
             ),
           ),
           SizedBox(height: 20),
@@ -272,18 +284,36 @@ class _LoginPageState extends State<LoginPage> {
           Center(
             child: TextButton(
               onPressed: () {},
-              child: Text('Forgot your password?', style: TextStyle(fontSize: 18)),
+              child:
+                  Text('Forgot your password?', style: TextStyle(fontSize: 18)),
             ),
           ),
           SizedBox(height: 30),
           // Sign In Button
           ElevatedButton(
             onPressed: () {
-              // Navigate to DashboardPage
-              Navigator.push(
-                context,
-                //MaterialPageRoute(builder: (context) => DashboardPage()), // Route to the DashboardPage
-              );
+              // Handle sign in with the collected IP address and port
+              print('IP Address: $ipAddress, Port: $port');
+              print('Username is: $username, Password: $password ');
+              var authorizer = SXServerAuthorization();
+              authorizer.setIPAddressAndPort(ipAddress,int.parse(port)).then((valid){
+                print("Is valid? $valid");
+                if(valid){
+                  authorizer.signin(username, password).then((value) {
+                    print("Value is: $value");
+                    if(value != "success"){
+                      //Not Signed in  -Error massege displayed
+                    }
+                    else{
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DashboardPage()));
+                    }
+                  },);
+                }
+              });
+              // Navigator.push(
+              //   context,
+              //   //MaterialPageRoute(builder: (context) => DashboardPage()), // Route to the DashboardPage
+              // );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple,
@@ -326,6 +356,52 @@ class _LoginPageState extends State<LoginPage> {
           ),
           SizedBox(height: 40),
           // Username TextField
+          // IP Address TextField for Sign Up
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.network_check, size: 24),
+                hintText: 'Enter IP Address',
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  ipAddress = value;
+                });
+              },
+            ),
+          ),
+          SizedBox(height: 20),
+
+// Port TextField for Sign Up
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.usb, size: 24),
+                hintText: 'Enter Port',
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  port = value;
+                });
+              },
+            ),
+          ),
+          SizedBox(height: 20),
+
           SizedBox(
             width: MediaQuery.of(context).size.width * 0.4,
             child: TextField(
@@ -378,10 +454,29 @@ class _LoginPageState extends State<LoginPage> {
           ),
           SizedBox(height: 30),
           // Sign Up Button
+// Sign Up Button
           ElevatedButton(
             onPressed: () {
-              setState(() {
-                isOnLeft = !isOnLeft;
+              // Print the values to the terminal
+              print('IP Address (Sign Up): $ipAddress');
+              print('Port (Sign Up): $port');
+              print('Username (Sign Up): $username');
+              print('Password (Sign Up): $password');
+              var authorizer = SXServerAuthorization();
+              authorizer.setIPAddressAndPort(ipAddress, int.parse(port)).then((valid){
+                print("Is valid $valid");
+                if (valid){
+                  authorizer.signup(username, password, password).then((result){
+                    print("Result is: $result");
+                    if(result == 'success'){
+                      //Open up login menu - Sign up successful
+                    }
+                    else{
+                      //Show up error message values entered not correct
+                    }
+
+                  });
+                }
               });
             },
             style: ElevatedButton.styleFrom(
@@ -396,6 +491,7 @@ class _LoginPageState extends State<LoginPage> {
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
           ),
+
         ],
       ),
     );
