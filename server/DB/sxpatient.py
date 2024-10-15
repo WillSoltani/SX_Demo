@@ -25,7 +25,7 @@ class SXPatient(current_app.config['DB']['base']):
     # The name of the patient. It is also indexed for fast searching
     sx_patient_name = Column(String, nullable=False, index=True)
     # addition table arguments
-    __tbale_args__ = (
+    __table_args__ = (
         UniqueConstraint( # making sure combination of doctor and patient are unique
             'sx_patient_name',
             'sx_doctor_id',

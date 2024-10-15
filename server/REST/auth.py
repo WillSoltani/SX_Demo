@@ -55,3 +55,10 @@ def signup():
         json_req['password'],
         user.SXUserType.CLIENT
     )
+
+@bp.route("/checktoken")
+def checktoken():
+    token = request.headers.get("Auth-Token")
+    if user.get_sx_user(token) is None:
+        return jsonify({"message": "invalid"}), 400
+    return jsonify({"message": "success"}), 200
