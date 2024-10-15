@@ -1,21 +1,21 @@
-// File: tab_properties.dart
-
+// File: lib/Extensions/tab_properties.dart
+// Author: Will
+// Version: 1.1
+// Revised: 06-10-2024
 import 'package:flutter/material.dart';
 
 class TabProperties extends StatefulWidget {
   final Widget child;
   final String title;
   final VoidCallback onClose;
-  final VoidCallback? onMinimize;
-  final VoidCallback? onResize;
+  final VoidCallback onMinimize;
 
   const TabProperties({
     Key? key,
-    required this.child,
     required this.title,
     required this.onClose,
-    this.onMinimize,
-    this.onResize,
+    required this.onMinimize,
+    required this.child,
   }) : super(key: key);
 
   @override
@@ -28,26 +28,32 @@ class _TabPropertiesState extends State<TabProperties> {
   bool _isMinimizeButtonHovered = false;
   bool _isResizeButtonHovered = false;
 
+  // State variable for maximize
+  bool _isMaximized = false;
+
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 40.0),
-      backgroundColor: Colors.transparent, // Make dialog background transparent
+    return Center(
       child: Container(
-        width: 1200, // Tab size
+        width: _isMaximized
+            ? MediaQuery.of(context).size.width
+            : MediaQuery.of(context).size.width * 0.45,
+        height: _isMaximized
+            ? MediaQuery.of(context).size.height
+            : MediaQuery.of(context).size.height * 0.75,
         decoration: BoxDecoration(
           color: Colors.grey[900], // Background color
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: _isMaximized ? null : BorderRadius.circular(12.0),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
+            if (!_isMaximized)
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Adjust height based on content
           children: [
             // Header with control buttons and title
             Container(
@@ -69,26 +75,23 @@ class _TabPropertiesState extends State<TabProperties> {
                             _isCloseButtonHovered = false;
                           });
                         },
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          margin: EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: AnimatedOpacity(
-                            opacity: _isCloseButtonHovered ? 1.0 : 0.0,
-                            duration: Duration(milliseconds: 200),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: 14,
-                              icon: Icon(
-                                Icons.close,
-                                color: Colors.white,
-                              ),
-                              onPressed: widget.onClose,
+                        child: GestureDetector(
+                          onTap: widget.onClose,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            margin: EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
                             ),
+                            child: _isCloseButtonHovered
+                                ? Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 14,
+                                  )
+                                : SizedBox(),
                           ),
                         ),
                       ),
@@ -104,26 +107,23 @@ class _TabPropertiesState extends State<TabProperties> {
                             _isMinimizeButtonHovered = false;
                           });
                         },
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          margin: EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.yellow,
-                            shape: BoxShape.circle,
-                          ),
-                          child: AnimatedOpacity(
-                            opacity: _isMinimizeButtonHovered ? 1.0 : 0.0,
-                            duration: Duration(milliseconds: 200),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: 14,
-                              icon: Icon(
-                                Icons.minimize,
-                                color: Colors.white,
-                              ),
-                              onPressed: widget.onMinimize,
+                        child: GestureDetector(
+                          onTap: widget.onMinimize,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            margin: EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.yellow[700],
+                              shape: BoxShape.circle,
                             ),
+                            child: _isMinimizeButtonHovered
+                                ? Icon(
+                                    Icons.minimize,
+                                    color: Colors.white,
+                                    size: 14,
+                                  )
+                                : SizedBox(),
                           ),
                         ),
                       ),
@@ -139,31 +139,34 @@ class _TabPropertiesState extends State<TabProperties> {
                             _isResizeButtonHovered = false;
                           });
                         },
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: AnimatedOpacity(
-                            opacity: _isResizeButtonHovered ? 1.0 : 0.0,
-                            duration: Duration(milliseconds: 200),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: 16,
-                              icon: Icon(
-                                Icons.crop_square,
-                                color: Colors.white,
-                              ),
-                              onPressed: widget.onResize,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isMaximized = !_isMaximized;
+                            });
+                          },
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
                             ),
+                            child: _isResizeButtonHovered
+                                ? Icon(
+                                    _isMaximized
+                                        ? Icons.crop_square // Restore icon
+                                        : Icons.crop_din, // Maximize icon
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
+                                : SizedBox(),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  // Spacer to center the title
+                  // Spacer
                   Expanded(
                     child: Center(
                       child: Text(
@@ -183,11 +186,12 @@ class _TabPropertiesState extends State<TabProperties> {
             ),
             Divider(color: Colors.grey),
             // Child content
-            widget.child,
+            Expanded(
+              child: widget.child,
+            ),
           ],
         ),
       ),
     );
   }
 }
-
