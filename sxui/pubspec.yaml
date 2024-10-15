@@ -18,15 +18,11 @@ dependencies:
   table_calendar: ^3.0.5
   flutter_typeahead: ^4.1.0
   cupertino_icons: ^1.0.8
-<<<<<<< HEAD
-  image_picker: ^0.8.4+4
   uuid: ^3.0.4
   faker: ^2.1.0
   email_validator: ^2.0.1
-=======
   flutter_secure_storage: ^9.2.2
   dio: ^5.7.0
->>>>>>> ed71ea99cc43264a08333a45625dedfbaba56778
 
 dev_dependencies:
   flutter_test:
