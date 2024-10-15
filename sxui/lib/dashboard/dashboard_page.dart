@@ -1,5 +1,5 @@
-// File: lib/dashboard/dashboard_page
-// Author: Will 
+// File: lib/dashboard/dashboard_page.dart
+// Author: Will
 // Version: 1.1
 // Revised: 06-10-2024
 import 'package:flutter/material.dart';
@@ -200,7 +200,6 @@ class DashboardPageState extends State<DashboardPage> {
             ],
           ),
           // Open tabs
-// Open tabs
           ...openTabs.map((tab) {
             return Offstage(
               offstage: tab.isMinimized,
@@ -236,6 +235,10 @@ class DashboardPageState extends State<DashboardPage> {
   // Tab management methods
   void _openTab(TabItem tab) {
     setState(() {
+      // Minimize all currently open tabs before opening a new one
+      for (var existingTab in openTabs) {
+        existingTab.isMinimized = true;
+      }
       openTabs.add(tab);
     });
   }
