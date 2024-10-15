@@ -109,7 +109,7 @@ class _AddProductState extends State<AddProduct> {
     }
   }
 
-  void _onSave() {
+void _onSave() {
     // Validate all forms
     bool isValid = true;
     for (var key in _formKeys) {
@@ -121,8 +121,17 @@ class _AddProductState extends State<AddProduct> {
 
     if (isValid) {
       // Perform save operation
-      print('Product saved');
-      // Add logic to save the product to your database or state management solution
+      widget.logMessages.value = [
+        ...widget.logMessages.value,
+        {
+          'description':
+              '🛒 PRODUCT: ${_productNameController.text} (ID: ${_productIdController.text}) was added successfully.',
+          'completed': false,
+        }
+      ];
+      widget.logMessages.notifyListeners();
+
+      // Close the form after saving
       widget.onClose();
     } else {
       // Go back to the first invalid step
@@ -137,6 +146,7 @@ class _AddProductState extends State<AddProduct> {
       }
     }
   }
+
 
   void _onStepTapped(int step) {
     if (step <= _currentStep) {
