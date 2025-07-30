@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/Old%20Files/dashboardFull.dart';
 import 'package:sxui/ServerCommunicator/SXServerLogin.dart';
-//import 'dashboard.dart'; // Import your DashboardPage
+import 'package:sxui/dashboard/dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -79,27 +78,26 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: 40),
                     ElevatedButton(
                       onPressed: () {
-                        setState(() {
-                          isOnLeft = !isOnLeft;
-                        });
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const DashboardPage()), // ✅ Use const
+                        );
                       },
+
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        side: BorderSide(color: Colors.white, width: 2),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 120, vertical: 30),
+                        backgroundColor: Colors.purple,
+                        padding: EdgeInsets.symmetric(horizontal: 120, vertical: 30),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                        ),
+                        'Sign In',
+                        style: TextStyle(fontSize: 24, color: Colors.white),
                       ),
-                    ),
+                    )
+
+
                   ],
                 ),
               ),
