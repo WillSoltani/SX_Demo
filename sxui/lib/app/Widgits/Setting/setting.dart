@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../Extensions/dashboard_box.dart';
 import '../../Extensions/hoverable_icon_text_item.dart';
 import '../../constants.dart';
-import '../../../pages/settings_page.dart';
+import 'package:sxui/app/pages/settings_page.dart';
 
 /// A simple box that contains a single hoverable icon-text item labeled 'Settings'.
 /// Tapping on the icon redirects the user to the Settings page, providing a quick and

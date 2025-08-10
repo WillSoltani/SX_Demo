@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart'; // For generating unique IDs
-import '../../../../dashboard/constants.dart';
+import 'package:sxui/app/constants.dart';
 
 class AddProduct extends StatefulWidget {
   final ValueNotifier<List<Map<String, dynamic>>> logMessages;
