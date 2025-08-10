@@ -6,9 +6,9 @@ import '../../Extensions/hoverable_icon_text_item.dart';
 import '../../Extensions/hoverable_stat_item.dart';
 import '../../Extensions/dashboard_box.dart';
 import '../../constants.dart';
-import '../../../pages/bill_invoices_page.dart';
-import '../../../pages/cases_page.dart';
-import '../../../pages/flagged_page.dart';
+import 'package:sxui/app/pages/bill_invoices_page.dart';
+import 'package:sxui/app/pages/cases_page.dart';
+import 'package:sxui/app/pages/flagged_page.dart';
 
 /// A box that holds the invoice and billing button with numbers indicating the ongoing active cases
 /// and how many of them are flagged. Tapping on the button directs to the bill and invoicing page.

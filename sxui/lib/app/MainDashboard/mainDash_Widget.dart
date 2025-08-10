@@ -16,7 +16,7 @@ import '../Extensions/dashboard_box.dart';
 import '../Extensions/hoverable_text_item.dart';
 import '../models/sub_item.dart';
 import '../constants.dart';
-import '../../pages/sub_item_page.dart';
+import 'package:sxui/app/pages/sub_item_page.dart';
 import '../models/tab_item.dart';
 // Import your updated InventoryManagement widget
 import 'Subs/Operations/inventory.dart';

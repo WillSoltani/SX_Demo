@@ -3,22 +3,39 @@
 // Version: 1.1
 // Revised: 06-10-2024
 import 'package:flutter/material.dart';
-import 'Widgits/Billing/Billing.dart';
-import './MainDashboard/mainDash_Widget.dart'; // Adjusted path
-import 'Widgits/Setting/setting.dart';
-import 'Widgits/SalesSummary/salesSum.dart';
-import 'Widgits/Search/search.dart';
-import 'Widgits/Drivers/driver1.dart';
-import 'Widgits/Drivers/driver2.dart';
-import 'Widgits/Drivers/driver3.dart';
-import 'Widgits/Drivers/driver4.dart';
-import 'Widgits/Integrations/Integrations.dart';
-import 'Widgits/Drivers/driverSum.dart';
-import 'Widgits/Calendar/calendar.dart';
-import 'Widgits/Log/log.dart';
-import 'MainDashboard/Subs/Customers/add_customer.dart';
-import 'models/tab_item.dart';
-import 'Extensions/tab_properties.dart';
+import 'package:sxui/app/Widgits/Billing/Billing.dart';
+import 'package:sxui/app/MainDashboard/mainDash_Widget.dart';
+import 'package:sxui/app/Widgits/Setting/setting.dart';
+import 'package:sxui/app/Widgits/SalesSummary/salesSum.dart';
+import 'package:sxui/app/Widgits/Search/search.dart';
+import 'package:sxui/app/Widgits/Drivers/driver1.dart';
+import 'package:sxui/app/Widgits/Drivers/driver2.dart';
+import 'package:sxui/app/Widgits/Drivers/driver3.dart';
+import 'package:sxui/app/Widgits/Drivers/driver4.dart';
+import 'package:sxui/app/Widgits/Drivers/driverSum.dart';
+import 'package:sxui/app/Widgits/Integrations/Integrations.dart';
+import 'package:sxui/app/Widgits/Calendar/calendar.dart';
+import 'package:sxui/app/Widgits/Log/log.dart';
+import 'package:sxui/app/MainDashboard/Subs/Customers/add_customer.dart';
+import 'package:sxui/app/models/tab_item.dart';
+import 'package:sxui/app/Extensions/tab_properties.dart';
+import 'package:sxui/app/Extensions/dashboard_box.dart'; // <-- needed for BoxX1..BoxX13
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SX Demo',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const DashboardPage(),
+    );
+  }
+}
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);

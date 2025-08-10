@@ -12,7 +12,7 @@ import 'dart:math'; // For generating random prices
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For formatting currency
 import 'package:uuid/uuid.dart'; // For generating unique IDs
-import '../../../../dashboard/constants.dart';
+import 'package:sxui/app/constants.dart';
 import '../../../Extensions/hoverable_expanded_item.dart'; // Import the hoverable item
 
 class InventoryManagement extends StatefulWidget {

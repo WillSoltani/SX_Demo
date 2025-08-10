@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.zip
+.DS_Store
+.dart_tool/
+build/
+*.iml
+*.zip
+*.tar
+*.tar.gz
