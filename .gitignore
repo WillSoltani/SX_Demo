@@ -1,2 +1,4 @@
 *.zip
 *.zip
+sxui/*.zip
+sxui/**/*.zip
