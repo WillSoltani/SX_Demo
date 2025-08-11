@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,6 +70,9 @@ class _DashboardPageState extends State<DashboardPage>
 
   // drag state
   int? _draggingIndex;
+
+  // measured tile heights by id
+  final Map<String, double> _tileHeights = {};
 
   // background + accent
   Offset _pointer = Offset.zero;
@@ -228,7 +232,8 @@ class _DashboardPageState extends State<DashboardPage>
     final colW = (gridW - gap * (cols + 1)) / cols;
     final heights = List<double>.filled(cols, 0);
     for (final t in _tiles) {
-      heights[_minIndex(heights)] += _baseH(t.size, colW) + gap;
+      final h = _tileHeights[t.id] ?? _baseH(t.size, colW);
+      heights[_minIndex(heights)] += h + gap;
     }
     return heights.reduce((a, b) => a > b ? a : b) + gap + reserveBottom;
   }
@@ -274,15 +279,12 @@ class _DashboardPageState extends State<DashboardPage>
           child: LayoutBuilder(
             builder: (context, c) {
               final width  = c.maxWidth;
-              final height = c.maxHeight;
               const gap = 12.0;
 
               final cols = (width / 320).floor().clamp(3, 8);
               final hasMiniBar = openTabs.any((t) => t.isMinimized);
               final reserveBottom = hasMiniBar ? 70.0 : 0.0;
-
-              final needed = _predictTallest(cols, width, gap, reserveBottom);
-              final scale = (height / needed).clamp(0.5, 1.0);
+              final _ = _predictTallest(cols, width, gap, reserveBottom);
               final colW = (width - gap * (cols + 1)) / cols;
 
               return MouseRegion(
@@ -303,75 +305,90 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
 
                     // grid
-                    Padding(
-                      padding: const EdgeInsets.all(gap),
-                      child: MasonryGridView.count(
-                        physics: const NeverScrollableScrollPhysics(),
-                        primary: false,
-                        shrinkWrap: true,
-                        crossAxisCount: cols,
-                        mainAxisSpacing: gap,
-                        crossAxisSpacing: gap,
-                        itemCount: _tiles.length,
-                        itemBuilder: (context, index) {
-                          final tile = _tiles[index];
-                          final h = _baseH(tile.size, colW) * scale;
+                    SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(gap),
+                        child: MasonryGridView.count(
+                          physics: const NeverScrollableScrollPhysics(),
+                          primary: false,
+                          shrinkWrap: true,
+                          crossAxisCount: cols,
+                          mainAxisSpacing: gap,
+                          crossAxisSpacing: gap,
+                          itemCount: _tiles.length,
+                          itemBuilder: (context, index) {
+                              final tile = _tiles[index];
 
-                          final chrome = _TileChrome(
-                            height: h,
-                            accent: _accent,
-                            highlight: tile.id == _highlightedTileId,
-                            child: IconTheme(
-                              data: IconThemeData(size: (colW * 0.08 * scale).clamp(12, 28)),
-                              child: DefaultTextStyle(
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: (colW * 0.05 * scale).clamp(11, 18),
-                                  overflow: TextOverflow.ellipsis,
+                              final chrome = _TileChrome(
+                                accent: _accent,
+                                highlight: tile.id == _highlightedTileId,
+                                child: IconTheme(
+                                  data: IconThemeData(size: (colW * 0.08).clamp(12, 28)),
+                                  child: DefaultTextStyle(
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: (colW * 0.05).clamp(11, 18),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    child: tile.builder(context),
+                                  ),
                                 ),
-                                child: tile.builder(context),
-                              ),
-                            ),
-                          );
+                              );
 
-                          final card = _InteractiveTileShell(
-                            child: GestureDetector(
-                              onDoubleTap: () => _cycleSize(index),
-                              onSecondaryTapDown: (d) => _showTileMenu(d.globalPosition, index),
-                              child: chrome,
-                            ),
-                          );
+                              final card = _InteractiveTileShell(
+                                child: GestureDetector(
+                                  onDoubleTap: () => _cycleSize(index),
+                                  onSecondaryTapDown: (d) => _showTileMenu(d.globalPosition, index),
+                                  child: chrome,
+                                ),
+                              );
 
-                          return RepaintBoundary(
-                            child: LongPressDraggable<int>(
-                              data: index,
-                              onDragStarted: () => setState(() => _draggingIndex = index),
-                              onDragEnd: (_)   => setState(() => _draggingIndex = null),
-                              feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.9, child: card)),
-                              childWhenDragging: Opacity(opacity: 0.25, child: card),
-                              child: DragTarget<int>(
-                                onWillAccept: (from) => from != index,
-                                onAccept: (from) => _swap(from!, index),
-                                builder: (context, candidate, _) {
-                                  final hovering = candidate.isNotEmpty;
-                                  return AnimatedScale(
-                                    scale: hovering ? 0.98 : 1.0,
-                                    duration: const Duration(milliseconds: 120),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 120),
-                                      decoration: BoxDecoration(
-                                        boxShadow: hovering
-                                            ? [BoxShadow(color: _accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
-                                            : [],
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    final render = context.findRenderObject();
+                                    if (render is RenderBox) {
+                                      final h = render.size.height;
+                                      if (_tileHeights[tile.id] != h) {
+                                        setState(() => _tileHeights[tile.id] = h);
+                                      }
+                                    }
+                                  });
+
+                                  return RepaintBoundary(
+                                    child: LongPressDraggable<int>(
+                                      data: index,
+                                      onDragStarted: () => setState(() => _draggingIndex = index),
+                                      onDragEnd: (_)   => setState(() => _draggingIndex = null),
+                                      feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.9, child: card)),
+                                      childWhenDragging: Opacity(opacity: 0.25, child: card),
+                                      child: DragTarget<int>(
+                                        onWillAccept: (from) => from != index,
+                                        onAccept: (from) => _swap(from!, index),
+                                        builder: (context, candidate, _) {
+                                          final hovering = candidate.isNotEmpty;
+                                          return AnimatedScale(
+                                            scale: hovering ? 0.98 : 1.0,
+                                            duration: const Duration(milliseconds: 120),
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 120),
+                                              decoration: BoxDecoration(
+                                                boxShadow: hovering
+                                                    ? [BoxShadow(color: _accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
+                                                    : [],
+                                              ),
+                                              child: card,
+                                            ),
+                                          );
+                                        },
                                       ),
-                                      child: card,
                                     ),
                                   );
                                 },
-                              ),
-                            ),
-                          );
-                        },
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
 
@@ -703,11 +720,11 @@ class _InteractiveTileShellState extends State<_InteractiveTileShell> {
 
 // Tile chrome with accent + highlight support
 class _TileChrome extends StatelessWidget {
-  final double height;
+  final double? height;
   final Widget child;
   final bool highlight;
   final Color accent;
-  const _TileChrome({required this.height, required this.child, required this.accent, this.highlight = false});
+  const _TileChrome({this.height, required this.child, required this.accent, this.highlight = false});
 
   @override
   Widget build(BuildContext context) {
