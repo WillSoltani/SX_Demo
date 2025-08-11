@@ -1,24 +1,29 @@
+import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Your existing widgets (keep these imports)
-import 'package:sxui/app/Widgits/Billing/Billing.dart';
+// Your widgets
 import 'package:sxui/app/MainDashboard/mainDash_Widget.dart';
-import 'package:sxui/app/Widgits/Setting/setting.dart';
-import 'package:sxui/app/Widgits/SalesSummary/salesSum.dart';
-import 'package:sxui/app/Widgits/Search/search.dart';
-import 'package:sxui/app/Widgits/Drivers/driver1.dart';
-import 'package:sxui/app/Widgits/Drivers/driver2.dart';
-import 'package:sxui/app/Widgits/Drivers/driver3.dart';
-import 'package:sxui/app/Widgits/Drivers/driver4.dart';
-import 'package:sxui/app/Widgits/Drivers/driverSum.dart';
-import 'package:sxui/app/Widgits/Integrations/Integrations.dart';
-import 'package:sxui/app/Widgits/Calendar/calendar.dart';
-import 'package:sxui/app/Widgits/Log/log.dart';
-import 'package:sxui/app/MainDashboard/Subs/Customers/add_customer.dart';
 import 'package:sxui/app/Extensions/tab_properties.dart';
-import 'package:sxui/app/Extensions/dashboard_box.dart';
+import 'Extensions/dashboard_box.dart';
 import 'package:sxui/app/models/tab_item.dart';
+import 'Widgits/Billing/Billing.dart';
+import 'Widgits/Setting/setting.dart';
+import 'Widgits/SalesSummary/salesSum.dart';
+import 'Widgits/Search/search.dart';
+import 'Widgits/Drivers/driver1.dart';
+import 'Widgits/Drivers/driver2.dart';
+import 'Widgits/Drivers/driver3.dart';
+import 'Widgits/Drivers/driver4.dart';
+import 'Widgits/Drivers/driverSum.dart';
+import 'Widgits/Integrations/Integrations.dart';
+import 'Widgits/Calendar/calendar.dart';
+import 'Widgits/Log/log.dart';
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -43,30 +48,47 @@ class TileData {
   final TileSize size;
   final Widget Function(BuildContext) builder;
   const TileData({required this.id, required this.size, required this.builder});
-
   TileData copyWith({TileSize? size}) =>
       TileData(id: id, size: size ?? this.size, builder: builder);
 }
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
-
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  // Used by some of your tiles
+class _DashboardPageState extends State<DashboardPage>
+    with SingleTickerProviderStateMixin {
+  // tiles (kept minimal = known-good widgets)
+  late List<TileData> _tiles;
+
+  // for your tiles that log
   final ValueNotifier<List<Map<String, dynamic>>> logMessages =
       ValueNotifier<List<Map<String, dynamic>>>([]);
 
-  // Reorderable tiles
-  late List<TileData> _tiles;
+  // drag state
   int? _draggingIndex;
+
+  // background + accent
+  Offset _pointer = Offset.zero;
+  late final AnimationController _bgCtl;
+  Color _accent = Colors.blueAccent;
+
+  // command palette
+  final TextEditingController _paletteController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  bool _paletteVisible = false;
+  String? _highlightedTileId;
+
+  // tabs (as before)
+  final List<TabItem> openTabs = [];
 
   @override
   void initState() {
     super.initState();
+    _focusNode.requestFocus();
+
     _tiles = [
       TileData(id: 'x1',  size: TileSize.small,  builder: (_) => BoxX1()),
       TileData(
@@ -90,13 +112,69 @@ class _DashboardPageState extends State<DashboardPage> {
       TileData(id: 'x12', size: TileSize.medium, builder: (_) => BoxX12(logMessages: logMessages)),
       TileData(id: 'x13', size: TileSize.large,  builder: (_) => BoxX13(logMessages: logMessages)),
     ];
+
+
+
+
+
+
+    // animated ambient bg
+    _bgCtl = AnimationController(vsync: this, duration: const Duration(seconds: 20))
+      ..repeat();
+
+    // load saved layout after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadLayout());
   }
 
-  // ---- Reordering helpers ----
+  @override
+  void dispose() {
+    _bgCtl.dispose();
+    _paletteController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  // ----- persistence -----
+  Future<void> _saveLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _tiles
+        .map((t) => {'id': t.id, 'size': t.size.index})
+        .toList(growable: false);
+    await prefs.setString('sx_layout', jsonEncode(data));
+  }
+
+  Future<void> _loadLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString('sx_layout');
+    if (s == null) return;
+    try {
+      final List<dynamic> arr = jsonDecode(s);
+      final map = {for (final t in _tiles) t.id: t};
+      final restored = <TileData>[];
+      for (final e in arr) {
+        final id = e['id'] as String?;
+        final sz = e['size'] as int?;
+        if (id != null && map.containsKey(id)) {
+          final base = map.remove(id)!;
+          final clamped = (sz ?? base.size.index).clamp(0, 2);
+          restored.add(base.copyWith(size: TileSize.values[clamped]));
+        }
+      }
+      restored.addAll(map.values); // any new tiles not in saved layout
+      setState(() => _tiles = restored);
+    } catch (_) {
+      // ignore bad JSON
+    }
+  }
+
+  // ----- drag + resize -----
   void _swap(int from, int to) {
     if (from == to || from < 0 || to < 0) return;
-    final item = _tiles.removeAt(from);
-    _tiles.insert(to, item);
+    setState(() {
+      final item = _tiles.removeAt(from);
+      _tiles.insert(to, item);
+    });
+    _saveLayout();
   }
 
   void _cycleSize(int index) {
@@ -107,10 +185,10 @@ class _DashboardPageState extends State<DashboardPage> {
       TileSize.large => TileSize.small,
     };
     setState(() => _tiles[index] = t.copyWith(size: next));
+    _saveLayout();
   }
 
-  // ---- Optional: use your existing Tab API as-is ----
-  final List<TabItem> openTabs = [];
+  // ----- tabs -----
   void _openTab(TabItem tab) {
     setState(() {
       for (var t in openTabs) t.isMinimized = true;
@@ -123,156 +201,262 @@ class _DashboardPageState extends State<DashboardPage> {
   void _restoreTab(String id) =>
       setState(() => openTabs.firstWhere((t) => t.id == id).isMinimized = false);
 
-  // ---------- Fit-to-viewport helpers (no overflow, auto-rescale) ----------
-  double _baseHeight(TileSize s, double colW) {
+  // ----- command palette -----
+  void _togglePalette() {
+    setState(() {
+      _paletteVisible = !_paletteVisible;
+      if (_paletteVisible) _paletteController.clear();
+    });
+  }
+
+  void _highlightTile(String id) {
+    setState(() => _highlightedTileId = id);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && _highlightedTileId == id) setState(() => _highlightedTileId = null);
+    });
+  }
+
+  // ----- sizing & fit-to-viewport -----
+  double _baseH(TileSize s, double colW) {
     switch (s) {
       case TileSize.small:  return colW * 0.75;
       case TileSize.medium: return colW * 1.20;
       case TileSize.large:  return colW * 1.85;
     }
   }
-
   int _minIndex(List<double> a) {
-    var mi = 0; var mv = a[0];
+    var mi = 0, mv = a[0];
     for (var i = 1; i < a.length; i++) { if (a[i] < mv) { mi = i; mv = a[i]; } }
     return mi;
   }
-
-  // predict tallest column height for current tiles
-  double _predictedTallest({
-    required int cols,
-    required double gridWidth,
-    required double gap,
-    required double reserveBottom,
-  }) {
-    final colW = (gridWidth - gap * (cols + 1)) / cols;
+  double _predictTallest(int cols, double gridW, double gap, double reserveBottom) {
+    final colW = (gridW - gap * (cols + 1)) / cols;
     final heights = List<double>.filled(cols, 0);
     for (final t in _tiles) {
-      final h = _baseHeight(t.size, colW) + gap;
-      heights[_minIndex(heights)] += h;
+      heights[_minIndex(heights)] += _baseH(t.size, colW) + gap;
     }
-    final tallest = heights.reduce((a, b) => a > b ? a : b);
-    return tallest + gap + reserveBottom; // top/bottom padding + reserved bar
+    return heights.reduce((a, b) => a > b ? a : b) + gap + reserveBottom;
+  }
+
+  // ----- context menu -----
+  Future<void> _showTileMenu(Offset pos, int index) async {
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx, pos.dy),
+      items: const [
+        PopupMenuItem(value: 's', child: Text('Resize: Small')),
+        PopupMenuItem(value: 'm', child: Text('Resize: Medium')),
+        PopupMenuItem(value: 'l', child: Text('Resize: Large')),
+        PopupMenuDivider(),
+        PopupMenuItem(value: 'highlight', child: Text('Highlight')),
+      ],
+    );
+    if (choice == null) return;
+    switch (choice) {
+      case 's': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.small)); _saveLayout(); break;
+      case 'm': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.medium)); _saveLayout(); break;
+      case 'l': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.large)); _saveLayout(); break;
+      case 'highlight': _highlightTile(_tiles[index].id); break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width  = constraints.maxWidth;
-            final height = constraints.maxHeight;
-            const gap = 12.0;
+    return RawKeyboardListener(
+      focusNode: _focusNode,
+      onKey: (event) {
+        if (event is RawKeyDownEvent) {
+          if (event.isControlPressed && event.logicalKey == LogicalKeyboardKey.keyK) {
+            _togglePalette();
+          } else if (event.logicalKey == LogicalKeyboardKey.escape && _paletteVisible) {
+            _togglePalette();
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final width  = c.maxWidth;
+              final height = c.maxHeight;
+              const gap = 12.0;
 
-            // Dynamic column count based on screen width
-            final cols = (width / 320).floor().clamp(3, 8);
+              final cols = (width / 320).floor().clamp(3, 8);
+              final hasMiniBar = openTabs.any((t) => t.isMinimized);
+              final reserveBottom = hasMiniBar ? 70.0 : 0.0;
 
-            // If minimized tabs bar is visible, reserve some space
-            final hasMiniBar   = openTabs.any((t) => t.isMinimized);
-            final reserveBottom = hasMiniBar ? 70.0 : 0.0;
+              final needed = _predictTallest(cols, width, gap, reserveBottom);
+              final scale = (height / needed).clamp(0.5, 1.0);
+              final colW = (width - gap * (cols + 1)) / cols;
 
-            // compute required height and scale to fit viewport
-            final needed = _predictedTallest(
-              cols: cols, gridWidth: width, gap: gap, reserveBottom: reserveBottom,
-            );
-            final scale = (height / needed).clamp(0.5, 1.0);
+              return MouseRegion(
+                onHover: (e) => setState(() => _pointer = e.localPosition),
+                child: Stack(
+                  children: [
+                    // animated ambient glow + pointer halo
+                    Positioned.fill(child: _AnimatedBackdrop(accent: _accent, controller: _bgCtl, pointer: _pointer)),
 
-            final columnWidth = (width - gap * (cols + 1)) / cols;
+                    // glassy top bar
+                    Positioned(
+                      left: 12, right: 12, top: 8,
+                      child: _GlassBar(
+                        accent: _accent,
+                        onAccentChanged: (c) => setState(() => _accent = c),
+                        onOpenPalette: _togglePalette,
+                      ),
+                    ),
 
-            return Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(gap),
-                  child: MasonryGridView.count(
-                    // lock to one screen; we do our own scaling to avoid overflow
-                    physics: const NeverScrollableScrollPhysics(),
-                    primary: false,
-                    shrinkWrap: true,
+                    // grid
+                    Padding(
+                      padding: const EdgeInsets.all(gap),
+                      child: MasonryGridView.count(
+                        physics: const NeverScrollableScrollPhysics(),
+                        primary: false,
+                        shrinkWrap: true,
+                        crossAxisCount: cols,
+                        mainAxisSpacing: gap,
+                        crossAxisSpacing: gap,
+                        itemCount: _tiles.length,
+                        itemBuilder: (context, index) {
+                          final tile = _tiles[index];
+                          final h = _baseH(tile.size, colW) * scale;
 
-                    crossAxisCount: cols,
-                    mainAxisSpacing: gap,
-                    crossAxisSpacing: gap,
-                    itemCount: _tiles.length,
-                    itemBuilder: (context, index) {
-                      final tile   = _tiles[index];
-                      final height = _baseHeight(tile.size, columnWidth) * scale;
-
-                      final chrome = _TileChrome(
-                        height: height,
-                        // unify icon/text scale with tile width and global scale
-                        child: IconTheme(
-                          data: IconThemeData(size: (columnWidth * 0.08 * scale).clamp(12, 28)),
-                          child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: (columnWidth * 0.05 * scale).clamp(11, 18),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            child: tile.builder(context),
-                          ),
-                        ),
-                      );
-
-                      final widgetCard = GestureDetector(
-                        onDoubleTap: () => _cycleSize(index), // resize on double tap (S/M/L)
-                        child: chrome,
-                      );
-
-                      // drag & drop to swap tiles
-                      return LongPressDraggable<int>(
-                        data: index,
-                        onDragStarted: () => setState(() => _draggingIndex = index),
-                        onDragEnd: (_)   => setState(() => _draggingIndex = null),
-                        feedback: Material(
-                          color: Colors.transparent,
-                          child: Opacity(opacity: 0.9, child: widgetCard),
-                        ),
-                        childWhenDragging: Opacity(opacity: 0.25, child: widgetCard),
-                        child: DragTarget<int>(
-                          onWillAccept: (from) => from != index,
-                          onAccept:    (from) => setState(() => _swap(from!, index)),
-                          builder: (context, candidate, rejected) {
-                            final hovering = candidate.isNotEmpty;
-                            return AnimatedScale(
-                              scale: hovering ? 0.98 : 1.0,
-                              duration: const Duration(milliseconds: 120),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 120),
-                                decoration: BoxDecoration(
-                                  boxShadow: hovering
-                                      ? [BoxShadow(
-                                          color: Colors.blue.withOpacity(0.25),
-                                          blurRadius: 12, spreadRadius: 2)]
-                                      : [],
+                          final chrome = _TileChrome(
+                            height: h,
+                            accent: _accent,
+                            highlight: tile.id == _highlightedTileId,
+                            child: IconTheme(
+                              data: IconThemeData(size: (colW * 0.08 * scale).clamp(12, 28)),
+                              child: DefaultTextStyle(
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: (colW * 0.05 * scale).clamp(11, 18),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: widgetCard,
+                                child: tile.builder(context),
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                            ),
+                          );
 
-                // Minimized tabs bar (kept from your original UI)
-                if (hasMiniBar)
-                  Positioned(
-                    bottom: 10,
-                    left: 10,
-                    child: _buildMinimizedTabsBar(context),
-                  ),
-              ],
-            );
-          },
+                          final card = _InteractiveTileShell(
+                            child: GestureDetector(
+                              onDoubleTap: () => _cycleSize(index),
+                              onSecondaryTapDown: (d) => _showTileMenu(d.globalPosition, index),
+                              child: chrome,
+                            ),
+                          );
+
+                          return RepaintBoundary(
+                            child: LongPressDraggable<int>(
+                              data: index,
+                              onDragStarted: () => setState(() => _draggingIndex = index),
+                              onDragEnd: (_)   => setState(() => _draggingIndex = null),
+                              feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.9, child: card)),
+                              childWhenDragging: Opacity(opacity: 0.25, child: card),
+                              child: DragTarget<int>(
+                                onWillAccept: (from) => from != index,
+                                onAccept: (from) => _swap(from!, index),
+                                builder: (context, candidate, _) {
+                                  final hovering = candidate.isNotEmpty;
+                                  return AnimatedScale(
+                                    scale: hovering ? 0.98 : 1.0,
+                                    duration: const Duration(milliseconds: 120),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 120),
+                                      decoration: BoxDecoration(
+                                        boxShadow: hovering
+                                            ? [BoxShadow(color: _accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
+                                            : [],
+                                      ),
+                                      child: card,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    if (hasMiniBar)
+                      Positioned(bottom: 10, left: 10, child: _buildMinimizedTabsBar(context)),
+
+                    if (_paletteVisible)
+                      Positioned.fill(child: _buildCommandPalette(width)),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  // --------- Minimized tabs bar (as in your original) ----------
+  // ---- command palette UI ----
+  Widget _buildCommandPalette(double width) {
+    final results = _tiles
+        .where((t) => t.id.toLowerCase().contains(_paletteController.text.toLowerCase()))
+        .toList();
+    final panelWidth = math.min(width * 0.6, 520.0);
+
+    return GestureDetector(
+      onTap: _togglePalette,
+      child: Container(
+        color: Colors.black54,
+        child: Center(
+          child: GestureDetector(
+            onTap: () {}, // stop tap-through
+            child: Container(
+              width: panelWidth,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 20)],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _paletteController,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Search tiles...',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 220,
+                    child: ListView(
+                      children: results.map((t) {
+                        return ListTile(
+                          title: Text(t.id, style: const TextStyle(color: Colors.white)),
+                          onTap: () {
+                            _highlightTile(t.id);
+                            _togglePalette();
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---- minimized tabs bar ----
   Widget _buildMinimizedTabsBar(BuildContext context) {
     final minimizedTabs = openTabs.where((t) => t.isMinimized).toList();
     if (minimizedTabs.isEmpty) return const SizedBox.shrink();
@@ -281,14 +465,10 @@ class _DashboardPageState extends State<DashboardPage> {
       decoration: BoxDecoration(
         color: Colors.grey[800],
         borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, -2)),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, -2))],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.5,
-      ),
+      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.5),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -331,18 +511,216 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-// Simple chrome wrapper for tiles (rounded corners, background)
+// ---------- components ----------
+
+class _AnimatedBackdrop extends StatelessWidget {
+  final Color accent;
+  final AnimationController controller;
+  final Offset pointer;
+  const _AnimatedBackdrop({required this.accent, required this.controller, required this.pointer});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, __) {
+        final t = controller.value * 2 * math.pi;
+        final blob1 = Offset(math.cos(t) * 0.25, math.sin(t) * 0.2);
+        final blob2 = Offset(math.cos(-t * 0.7) * -0.3, math.sin(-t * 0.7) * 0.25);
+        final size = MediaQuery.of(context).size;
+
+        return Stack(
+          children: [
+            // ambient blobs
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _GlowPainter(accent, blob1, blob2),
+              ),
+            ),
+            // pointer halo
+            Positioned.fill(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(
+                      (size.width == 0) ? 0 : (pointer.dx / size.width) * 2 - 1,
+                      (size.height == 0) ? 0 : (pointer.dy / size.height) * 2 - 1,
+                    ),
+                    radius: 1.1,
+                    colors: [accent.withOpacity(0.14), Colors.transparent],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GlowPainter extends CustomPainter {
+  final Color accent;
+  final Offset blob1;
+  final Offset blob2;
+  _GlowPainter(this.accent, this.blob1, this.blob2);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
+    p.color = accent.withOpacity(0.10);
+    canvas.drawCircle(Offset(size.width * (0.5 + blob1.dx), size.height * (0.4 + blob1.dy)), size.width * 0.35, p);
+    p.color = Colors.purpleAccent.withOpacity(0.08);
+    canvas.drawCircle(Offset(size.width * (0.4 + blob2.dx), size.height * (0.6 + blob2.dy)), size.width * 0.30, p);
+  }
+  @override
+  bool shouldRepaint(covariant _GlowPainter oldDelegate) => true;
+}
+
+class _GlassBar extends StatelessWidget {
+  final Color accent;
+  final ValueChanged<Color> onAccentChanged;
+  final VoidCallback onOpenPalette;
+  const _GlassBar({required this.accent, required this.onAccentChanged, required this.onOpenPalette});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = ValueNotifier<DateTime>(DateTime.now());
+    // lightweight clock updater
+    Future.microtask(() async {
+      while (true) {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        now.value = DateTime.now();
+      }
+    });
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.06),
+            border: Border.all(color: Colors.white12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Icon(Icons.dashboard_customize, color: accent),
+              const SizedBox(width: 8),
+              const Text('SX Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              // quick accent picker
+              Row(
+                children: [
+                  _AccentDot(color: Colors.blueAccent, selected: accent == Colors.blueAccent, onTap: onAccentChanged),
+                  _AccentDot(color: Colors.tealAccent.shade400, selected: accent == Colors.tealAccent.shade400, onTap: onAccentChanged),
+                  _AccentDot(color: Colors.amberAccent, selected: accent == Colors.amberAccent, onTap: onAccentChanged),
+                  _AccentDot(color: Colors.pinkAccent, selected: accent == Colors.pinkAccent, onTap: onAccentChanged),
+                ],
+              ),
+              const SizedBox(width: 12),
+              TextButton.icon(
+                onPressed: onOpenPalette,
+                icon: const Icon(Icons.search, color: Colors.white70, size: 18),
+                label: const Text('Cmd', style: TextStyle(color: Colors.white70)),
+                style: TextButton.styleFrom(foregroundColor: Colors.white70),
+              ),
+              const SizedBox(width: 12),
+              ValueListenableBuilder<DateTime>(
+                valueListenable: now,
+                builder: (_, d, __) => Text(
+                  '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(color: Colors.white70, fontFeatures: [ui.FontFeature.tabularFigures()]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccentDot extends StatelessWidget {
+  final Color color;
+  final bool selected;
+  final ValueChanged<Color> onTap;
+  const _AccentDot({required this.color, required this.selected, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onTap(color),
+      child: Container(
+        width: 18, height: 18, margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: color, shape: BoxShape.circle,
+          boxShadow: selected ? [BoxShadow(color: color.withOpacity(0.7), blurRadius: 12, spreadRadius: 1)] : null,
+          border: Border.all(color: Colors.white.withOpacity(0.6), width: selected ? 2 : 1),
+        ),
+      ),
+    );
+  }
+}
+
+// 3D hover/tilt wrapper
+class _InteractiveTileShell extends StatefulWidget {
+  final Widget child;
+  const _InteractiveTileShell({required this.child});
+  @override
+  State<_InteractiveTileShell> createState() => _InteractiveTileShellState();
+}
+class _InteractiveTileShellState extends State<_InteractiveTileShell> {
+  bool _hover = false;
+  double _x = 0.5, _y = 0.5;
+  @override
+  Widget build(BuildContext context) {
+    final tiltX = _hover ? (_y - 0.5) * 0.06 : 0.0;
+    final tiltY = _hover ? -(_x - 0.5) * 0.06 : 0.0;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      onHover: (e) {
+        final size = context.size;
+        if (size != null) {
+          setState(() {
+            _x = (e.localPosition.dx / size.width).clamp(0, 1);
+            _y = (e.localPosition.dy / size.height).clamp(0, 1);
+          });
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        child: Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001)
+            ..rotateX(tiltX)
+            ..rotateY(tiltY)
+            ..scale(_hover ? 1.015 : 1.0),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+// Tile chrome with accent + highlight support
 class _TileChrome extends StatelessWidget {
   final double height;
   final Widget child;
-  const _TileChrome({required this.height, required this.child});
+  final bool highlight;
+  final Color accent;
+  const _TileChrome({required this.height, required this.child, required this.accent, this.highlight = false});
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         height: height,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -350,12 +728,15 @@ class _TileChrome extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(
+            color: highlight ? Colors.amberAccent : Colors.white12,
+            width: highlight ? 3 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(color: accent.withOpacity(0.15), blurRadius: 20, spreadRadius: 1),
+          ],
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: child,
-        ),
+        child: Material(color: Colors.transparent, child: child),
       ),
     );
   }
