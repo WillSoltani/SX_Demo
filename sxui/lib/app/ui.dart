@@ -113,11 +113,6 @@ class _DashboardPageState extends State<DashboardPage>
       TileData(id: 'x13', size: TileSize.large,  builder: (_) => BoxX13(logMessages: logMessages)),
     ];
 
-
-
-
-
-
     // animated ambient bg
     _bgCtl = AnimationController(vsync: this, duration: const Duration(seconds: 20))
       ..repeat();
