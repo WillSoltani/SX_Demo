@@ -1,30 +1,27 @@
-import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-// Your widgets
+// Your existing widgets (keep these imports)
+import 'package:sxui/app/Widgits/Billing/Billing.dart';
 import 'package:sxui/app/MainDashboard/mainDash_Widget.dart';
+import 'package:sxui/app/Widgits/Setting/setting.dart';
+import 'package:sxui/app/Widgits/SalesSummary/salesSum.dart';
+import 'package:sxui/app/Widgits/Search/search.dart';
+import 'package:sxui/app/Widgits/Drivers/driver1.dart';
+import 'package:sxui/app/Widgits/Drivers/driver2.dart';
+import 'package:sxui/app/Widgits/Drivers/driver3.dart';
+import 'package:sxui/app/Widgits/Drivers/driver4.dart';
+import 'package:sxui/app/Widgits/Drivers/driverSum.dart';
+import 'package:sxui/app/Widgits/Integrations/Integrations.dart';
+import 'package:sxui/app/Widgits/Calendar/calendar.dart';
+import 'package:sxui/app/Widgits/Log/log.dart';
+import 'package:sxui/app/MainDashboard/Subs/Customers/add_customer.dart';
 import 'package:sxui/app/Extensions/tab_properties.dart';
-import 'Extensions/dashboard_box.dart';
+import 'package:sxui/app/Extensions/dashboard_box.dart';
 import 'package:sxui/app/models/tab_item.dart';
-import 'Widgits/Billing/Billing.dart';
-import 'Widgits/Setting/setting.dart';
-import 'Widgits/SalesSummary/salesSum.dart';
-import 'Widgits/Search/search.dart';
-import 'Widgits/Drivers/driver1.dart';
-import 'Widgits/Drivers/driver2.dart';
-import 'Widgits/Drivers/driver3.dart';
-import 'Widgits/Drivers/driver4.dart';
-import 'Widgits/Drivers/driverSum.dart';
-import 'Widgits/Integrations/Integrations.dart';
-import 'Widgits/Calendar/calendar.dart';
-import 'Widgits/Log/log.dart';
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -61,18 +58,15 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
-  // tiles (kept minimal = known-good widgets)
+  // tiles
   late List<TileData> _tiles;
 
-  // for your tiles that log
+  // used by some tiles
   final ValueNotifier<List<Map<String, dynamic>>> logMessages =
       ValueNotifier<List<Map<String, dynamic>>>([]);
 
   // drag state
   int? _draggingIndex;
-
-  // measured tile heights by id
-  final Map<String, double> _tileHeights = {};
 
   // background + accent
   Offset _pointer = Offset.zero;
@@ -85,7 +79,7 @@ class _DashboardPageState extends State<DashboardPage>
   bool _paletteVisible = false;
   String? _highlightedTileId;
 
-  // tabs (as before)
+  // tabs
   final List<TabItem> openTabs = [];
 
   @override
@@ -117,12 +111,8 @@ class _DashboardPageState extends State<DashboardPage>
       TileData(id: 'x13', size: TileSize.large,  builder: (_) => BoxX13(logMessages: logMessages)),
     ];
 
-    // animated ambient bg
     _bgCtl = AnimationController(vsync: this, duration: const Duration(seconds: 20))
       ..repeat();
-
-    // load saved layout after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadLayout());
   }
 
   @override
@@ -133,47 +123,13 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
-  // ----- persistence -----
-  Future<void> _saveLayout() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _tiles
-        .map((t) => {'id': t.id, 'size': t.size.index})
-        .toList(growable: false);
-    await prefs.setString('sx_layout', jsonEncode(data));
-  }
-
-  Future<void> _loadLayout() async {
-    final prefs = await SharedPreferences.getInstance();
-    final s = prefs.getString('sx_layout');
-    if (s == null) return;
-    try {
-      final List<dynamic> arr = jsonDecode(s);
-      final map = {for (final t in _tiles) t.id: t};
-      final restored = <TileData>[];
-      for (final e in arr) {
-        final id = e['id'] as String?;
-        final sz = e['size'] as int?;
-        if (id != null && map.containsKey(id)) {
-          final base = map.remove(id)!;
-          final clamped = (sz ?? base.size.index).clamp(0, 2);
-          restored.add(base.copyWith(size: TileSize.values[clamped]));
-        }
-      }
-      restored.addAll(map.values); // any new tiles not in saved layout
-      setState(() => _tiles = restored);
-    } catch (_) {
-      // ignore bad JSON
-    }
-  }
-
-  // ----- drag + resize -----
+  // ---- reordering ----
   void _swap(int from, int to) {
     if (from == to || from < 0 || to < 0) return;
     setState(() {
       final item = _tiles.removeAt(from);
       _tiles.insert(to, item);
     });
-    _saveLayout();
   }
 
   void _cycleSize(int index) {
@@ -184,10 +140,9 @@ class _DashboardPageState extends State<DashboardPage>
       TileSize.large => TileSize.small,
     };
     setState(() => _tiles[index] = t.copyWith(size: next));
-    _saveLayout();
   }
 
-  // ----- tabs -----
+  // ---- tabs ----
   void _openTab(TabItem tab) {
     setState(() {
       for (var t in openTabs) t.isMinimized = true;
@@ -200,7 +155,7 @@ class _DashboardPageState extends State<DashboardPage>
   void _restoreTab(String id) =>
       setState(() => openTabs.firstWhere((t) => t.id == id).isMinimized = false);
 
-  // ----- command palette -----
+  // ---- command palette ----
   void _togglePalette() {
     setState(() {
       _paletteVisible = !_paletteVisible;
@@ -211,52 +166,18 @@ class _DashboardPageState extends State<DashboardPage>
   void _highlightTile(String id) {
     setState(() => _highlightedTileId = id);
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted && _highlightedTileId == id) setState(() => _highlightedTileId = null);
+      if (mounted && _highlightedTileId == id) {
+        setState(() => _highlightedTileId = null);
+      }
     });
   }
 
-  // ----- sizing & fit-to-viewport -----
-  double _baseH(TileSize s, double colW) {
+  // ---- height helper (same numbers as your old code) ----
+  double _baseHeight(TileSize s, double colW) {
     switch (s) {
       case TileSize.small:  return colW * 0.75;
       case TileSize.medium: return colW * 1.20;
       case TileSize.large:  return colW * 1.85;
-    }
-  }
-  int _minIndex(List<double> a) {
-    var mi = 0, mv = a[0];
-    for (var i = 1; i < a.length; i++) { if (a[i] < mv) { mi = i; mv = a[i]; } }
-    return mi;
-  }
-  double _predictTallest(int cols, double gridW, double gap, double reserveBottom) {
-    final colW = (gridW - gap * (cols + 1)) / cols;
-    final heights = List<double>.filled(cols, 0);
-    for (final t in _tiles) {
-      final h = _tileHeights[t.id] ?? _baseH(t.size, colW);
-      heights[_minIndex(heights)] += h + gap;
-    }
-    return heights.reduce((a, b) => a > b ? a : b) + gap + reserveBottom;
-  }
-
-  // ----- context menu -----
-  Future<void> _showTileMenu(Offset pos, int index) async {
-    final choice = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx, pos.dy),
-      items: const [
-        PopupMenuItem(value: 's', child: Text('Resize: Small')),
-        PopupMenuItem(value: 'm', child: Text('Resize: Medium')),
-        PopupMenuItem(value: 'l', child: Text('Resize: Large')),
-        PopupMenuDivider(),
-        PopupMenuItem(value: 'highlight', child: Text('Highlight')),
-      ],
-    );
-    if (choice == null) return;
-    switch (choice) {
-      case 's': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.small)); _saveLayout(); break;
-      case 'm': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.medium)); _saveLayout(); break;
-      case 'l': setState(() => _tiles[index] = _tiles[index].copyWith(size: TileSize.large)); _saveLayout(); break;
-      case 'highlight': _highlightTile(_tiles[index].id); break;
     }
   }
 
@@ -279,20 +200,29 @@ class _DashboardPageState extends State<DashboardPage>
           child: LayoutBuilder(
             builder: (context, c) {
               final width  = c.maxWidth;
+              final height = c.maxHeight;
               const gap = 12.0;
 
-              final cols = (width / 320).floor().clamp(3, 8);
-              final hasMiniBar = openTabs.any((t) => t.isMinimized);
-              final reserveBottom = hasMiniBar ? 70.0 : 0.0;
-              final _ = _predictTallest(cols, width, gap, reserveBottom);
+              final cols = ((width / 320).floor()).clamp(3, 8).toInt(); // 3..8
               final colW = (width - gap * (cols + 1)) / cols;
+
+              final iconSize  = ((colW * 0.08).clamp(12.0, 28.0)).toDouble();
+              final textSize  = ((colW * 0.05).clamp(11.0, 18.0)).toDouble();
+
+              final hasMiniBar = openTabs.any((t) => t.isMinimized);
 
               return MouseRegion(
                 onHover: (e) => setState(() => _pointer = e.localPosition),
                 child: Stack(
                   children: [
-                    // animated ambient glow + pointer halo
-                    Positioned.fill(child: _AnimatedBackdrop(accent: _accent, controller: _bgCtl, pointer: _pointer)),
+                    // animated ambient background
+                    Positioned.fill(
+                      child: _AnimatedBackdrop(
+                        accent: _accent,
+                        controller: _bgCtl,
+                        pointer: _pointer,
+                      ),
+                    ),
 
                     // glassy top bar
                     Positioned(
@@ -304,96 +234,80 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                     ),
 
-                    // grid
-                    SingleChildScrollView(
-                      child: Padding(
+                    // GRID — single scrollable, pinned below the bar
+                    Positioned.fill(
+                      top: 72, // keep clear of the top bar
+                      child: MasonryGridView.count(
                         padding: const EdgeInsets.all(gap),
-                        child: MasonryGridView.count(
-                          physics: const NeverScrollableScrollPhysics(),
-                          primary: false,
-                          shrinkWrap: true,
-                          crossAxisCount: cols,
-                          mainAxisSpacing: gap,
-                          crossAxisSpacing: gap,
-                          itemCount: _tiles.length,
-                          itemBuilder: (context, index) {
-                              final tile = _tiles[index];
+                        crossAxisCount: cols,
+                        mainAxisSpacing: gap,
+                        crossAxisSpacing: gap,
+                        itemCount: _tiles.length,
+                        itemBuilder: (context, index) {
+                          final tile   = _tiles[index];
+                          final h      = _baseHeight(tile.size, colW);
 
-                              final chrome = _TileChrome(
-                                accent: _accent,
-                                highlight: tile.id == _highlightedTileId,
-                                child: IconTheme(
-                                  data: IconThemeData(size: (colW * 0.08).clamp(12, 28)),
-                                  child: DefaultTextStyle(
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: (colW * 0.05).clamp(11, 18),
-                                      overflow: TextOverflow.ellipsis,
+                          final chrome = _TileChrome(
+                            height: h, // explicit height => never collapses
+                            highlight: tile.id == _highlightedTileId,
+                            child: IconTheme(
+                              data: IconThemeData(size: iconSize),
+                              child: DefaultTextStyle(
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: textSize,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                child: tile.builder(context),
+                              ),
+                            ),
+                          );
+
+                          final card = GestureDetector(
+                            onDoubleTap: () => _cycleSize(index),
+                            child: chrome,
+                          );
+
+                          return LongPressDraggable<int>(
+                            data: index,
+                            onDragStarted: () => setState(() => _draggingIndex = index),
+                            onDragEnd: (_)   => setState(() => _draggingIndex = null),
+                            feedback: Material(
+                              color: Colors.transparent,
+                              child: Opacity(opacity: 0.9, child: card),
+                            ),
+                            childWhenDragging: Opacity(opacity: 0.25, child: card),
+                            child: DragTarget<int>(
+                              onWillAccept: (from) => from != index,
+                              onAccept:    (from) => _swap(from!, index),
+                              builder: (context, candidate, _) {
+                                final hovering = candidate.isNotEmpty;
+                                return AnimatedScale(
+                                  scale: hovering ? 0.98 : 1.0,
+                                  duration: const Duration(milliseconds: 120),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 120),
+                                    decoration: BoxDecoration(
+                                      boxShadow: hovering
+                                          ? [BoxShadow(color: _accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
+                                          : [],
                                     ),
-                                    child: tile.builder(context),
+                                    child: card,
                                   ),
-                                ),
-                              );
-
-                              final card = _InteractiveTileShell(
-                                child: GestureDetector(
-                                  onDoubleTap: () => _cycleSize(index),
-                                  onSecondaryTapDown: (d) => _showTileMenu(d.globalPosition, index),
-                                  child: chrome,
-                                ),
-                              );
-
-                              return LayoutBuilder(
-                                builder: (context, constraints) {
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    final render = context.findRenderObject();
-                                    if (render is RenderBox) {
-                                      final h = render.size.height;
-                                      if (_tileHeights[tile.id] != h) {
-                                        setState(() => _tileHeights[tile.id] = h);
-                                      }
-                                    }
-                                  });
-
-                                  return RepaintBoundary(
-                                    child: LongPressDraggable<int>(
-                                      data: index,
-                                      onDragStarted: () => setState(() => _draggingIndex = index),
-                                      onDragEnd: (_)   => setState(() => _draggingIndex = null),
-                                      feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.9, child: card)),
-                                      childWhenDragging: Opacity(opacity: 0.25, child: card),
-                                      child: DragTarget<int>(
-                                        onWillAccept: (from) => from != index,
-                                        onAccept: (from) => _swap(from!, index),
-                                        builder: (context, candidate, _) {
-                                          final hovering = candidate.isNotEmpty;
-                                          return AnimatedScale(
-                                            scale: hovering ? 0.98 : 1.0,
-                                            duration: const Duration(milliseconds: 120),
-                                            child: AnimatedContainer(
-                                              duration: const Duration(milliseconds: 120),
-                                              decoration: BoxDecoration(
-                                                boxShadow: hovering
-                                                    ? [BoxShadow(color: _accent.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
-                                                    : [],
-                                              ),
-                                              child: card,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ),
 
                     if (hasMiniBar)
-                      Positioned(bottom: 10, left: 10, child: _buildMinimizedTabsBar(context)),
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: _buildMinimizedTabsBar(context),
+                      ),
 
                     if (_paletteVisible)
                       Positioned.fill(child: _buildCommandPalette(width)),
@@ -598,7 +512,6 @@ class _GlassBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = ValueNotifier<DateTime>(DateTime.now());
-    // lightweight clock updater
     Future.microtask(() async {
       while (true) {
         await Future<void>.delayed(const Duration(seconds: 1));
@@ -623,7 +536,6 @@ class _GlassBar extends StatelessWidget {
               const SizedBox(width: 8),
               const Text('SX Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
               const Spacer(),
-              // quick accent picker
               Row(
                 children: [
                   _AccentDot(color: Colors.blueAccent, selected: accent == Colors.blueAccent, onTap: onAccentChanged),
@@ -676,55 +588,16 @@ class _AccentDot extends StatelessWidget {
   }
 }
 
-// 3D hover/tilt wrapper
-class _InteractiveTileShell extends StatefulWidget {
-  final Widget child;
-  const _InteractiveTileShell({required this.child});
-  @override
-  State<_InteractiveTileShell> createState() => _InteractiveTileShellState();
-}
-class _InteractiveTileShellState extends State<_InteractiveTileShell> {
-  bool _hover = false;
-  double _x = 0.5, _y = 0.5;
-  @override
-  Widget build(BuildContext context) {
-    final tiltX = _hover ? (_y - 0.5) * 0.06 : 0.0;
-    final tiltY = _hover ? -(_x - 0.5) * 0.06 : 0.0;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      onHover: (e) {
-        final size = context.size;
-        if (size != null) {
-          setState(() {
-            _x = (e.localPosition.dx / size.width).clamp(0, 1);
-            _y = (e.localPosition.dy / size.height).clamp(0, 1);
-          });
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        child: Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateX(tiltX)
-            ..rotateY(tiltY)
-            ..scale(_hover ? 1.015 : 1.0),
-          child: widget.child,
-        ),
-      ),
-    );
-  }
-}
-
-// Tile chrome with accent + highlight support
+// simple chrome wrapper with explicit height (prevents 0-height issues)
 class _TileChrome extends StatelessWidget {
-  final double? height;
+  final double height;
   final Widget child;
   final bool highlight;
-  final Color accent;
-  const _TileChrome({this.height, required this.child, required this.accent, this.highlight = false});
+  const _TileChrome({
+    required this.height,
+    required this.child,
+    this.highlight = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -733,6 +606,7 @@ class _TileChrome extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
+        height: height,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF0B0F1A), Color(0xFF111827)],
@@ -743,17 +617,11 @@ class _TileChrome extends StatelessWidget {
             color: highlight ? Colors.amberAccent : Colors.white12,
             width: highlight ? 3 : 1,
           ),
-          boxShadow: [
-            BoxShadow(color: accent.withOpacity(0.15), blurRadius: 20, spreadRadius: 1),
-          ],
+          boxShadow: highlight
+              ? [BoxShadow(color: Colors.amberAccent.withOpacity(0.6), blurRadius: 20, spreadRadius: 2)]
+              : [],
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: height),
-            child: SingleChildScrollView(child: child),
-          ),
-        ),
+        child: Material(color: Colors.transparent, child: child),
       ),
     );
   }

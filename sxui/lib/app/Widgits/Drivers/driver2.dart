@@ -306,27 +306,26 @@ class _BoxX7State extends State<BoxX7> {
     final int totalPickups = _pickupItems.length;
     final int totalDeliveries = _deliveryItems.length;
 
-    return SingleChildScrollView(
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.grey[700],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[800]!, width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                'Driver2',
-                style: titleStyle,
-                textAlign: TextAlign.center,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[700],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              'Driver2',
+              style: titleStyle,
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Row(
               children: [
                 Expanded(
                   child: Column(
@@ -338,22 +337,22 @@ class _BoxX7State extends State<BoxX7> {
                         child: Text('Pickup', style: subtitleStyle),
                       ),
                       const SizedBox(height: 8),
-                      ScrollConfiguration(
-                        behavior: NoGlowScrollBehavior(),
-                        child: _pickupItems.isNotEmpty
-                            ? ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _pickupItems.length,
-                                itemBuilder: (context, index) {
-                                  return _buildPickupItem(
-                                      _pickupItems[index]);
-                                },
-                              )
-                            : Center(
-                                child: Text('No pickups available',
-                                    style: itemStyle),
-                              ),
+                      Expanded(
+                        child: ScrollConfiguration(
+                          behavior: NoGlowScrollBehavior(),
+                          child: _pickupItems.isNotEmpty
+                              ? ListView.builder(
+                                  itemCount: _pickupItems.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildPickupItem(
+                                        _pickupItems[index]);
+                                  },
+                                )
+                              : Center(
+                                  child: Text('No pickups available',
+                                      style: itemStyle),
+                                ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Center(child: Text('$totalPickups', style: titleStyle)),
@@ -362,6 +361,7 @@ class _BoxX7State extends State<BoxX7> {
                 ),
                 Container(
                   width: 1,
+                  height: double.infinity,
                   color: Colors.grey[800],
                   margin: const EdgeInsets.symmetric(horizontal: 8.0),
                 ),
@@ -375,22 +375,22 @@ class _BoxX7State extends State<BoxX7> {
                         child: Text('Delivery', style: subtitleStyle),
                       ),
                       const SizedBox(height: 8),
-                      ScrollConfiguration(
-                        behavior: NoGlowScrollBehavior(),
-                        child: _deliveryItems.isNotEmpty
-                            ? ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _deliveryItems.length,
-                                itemBuilder: (context, index) {
-                                  return _buildDeliveryItem(
-                                      _deliveryItems[index]);
-                                },
-                              )
-                            : Center(
-                                child: Text('No deliveries available',
-                                    style: itemStyle),
-                              ),
+                      Expanded(
+                        child: ScrollConfiguration(
+                          behavior: NoGlowScrollBehavior(),
+                          child: _deliveryItems.isNotEmpty
+                              ? ListView.builder(
+                                  itemCount: _deliveryItems.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildDeliveryItem(
+                                        _deliveryItems[index]);
+                                  },
+                                )
+                              : Center(
+                                  child: Text('No deliveries available',
+                                      style: itemStyle),
+                                ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Center(
@@ -400,8 +400,8 @@ class _BoxX7State extends State<BoxX7> {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
