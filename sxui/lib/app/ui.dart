@@ -733,7 +733,6 @@ class _TileChrome extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        height: height,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF0B0F1A), Color(0xFF111827)],
@@ -748,7 +747,13 @@ class _TileChrome extends StatelessWidget {
             BoxShadow(color: accent.withOpacity(0.15), blurRadius: 20, spreadRadius: 1),
           ],
         ),
-        child: Material(color: Colors.transparent, child: child),
+        child: Material(
+          color: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: height),
+            child: SingleChildScrollView(child: child),
+          ),
+        ),
       ),
     );
   }
