@@ -5,7 +5,7 @@
 // Revised: 07-10-2024
 
 import 'package:flutter/material.dart';
-import '../constants.dart';
+import 'package:sxui/app/shared/constants.dart';
 
 class HoverableExpandedItem extends StatefulWidget {
   final String text;

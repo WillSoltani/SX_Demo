@@ -3,7 +3,7 @@
 // Version: 1.1
 // Revised: 06-10-2024
 import 'package:flutter/material.dart';
-import '../constants.dart';
+import 'package:sxui/app/shared/constants.dart';
 
 class HoverableStatItem extends StatefulWidget {
   final String number;
