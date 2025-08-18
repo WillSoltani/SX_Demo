@@ -51,3 +51,6 @@ build/
 *.zip
 *.tar
 *.tar.gz
+.git_backup_before_cleanup/
+.venv/
+server/.venv/
