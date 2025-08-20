@@ -12,3 +12,10 @@ sxui/**/*.zip
 # cleanup / generated
 .git_backup_before_cleanup/
 sxui/.flutter-plugins-dependencies*
+sxui/linux/flutter/generated_plugin_registrant.cc
+sxui/linux/flutter/generated_plugin_registrant.h
+sxui/linux/flutter/generated_plugins.cmake
+sxui/macos/Flutter/GeneratedPluginRegistrant.swift
+sxui/windows/flutter/generated_plugin_registrant.cc
+sxui/windows/flutter/generated_plugin_registrant.h
+sxui/windows/flutter/generated_plugins.cmake
