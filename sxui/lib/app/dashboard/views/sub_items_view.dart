@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/app/constants.dart';
+import 'package:sxui/app/shared/constants.dart';
 import 'package:sxui/app/Extensions/hoverable_text_item.dart';
-import 'package:sxui/app/models/sub_item.dart';
+import 'package:sxui/app/shared/models/sub_item.dart';
 
 
 class SubItemsView extends StatelessWidget {

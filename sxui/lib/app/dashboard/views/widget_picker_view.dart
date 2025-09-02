@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/app/MainDashboard/data/widget_registry.dart';
+import 'package:sxui/app/dashboard/data/widget_registry.dart';
 
 Future<void> showWidgetPicker({
   required BuildContext context,

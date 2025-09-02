@@ -2,8 +2,8 @@
 //Version 1.0
 //Revised: 30-09-2024
 import 'package:flutter/material.dart';
-import '../../Extensions/dashboard_box.dart';
-import '../../Extensions/hoverable_icon_text_item.dart';
+import '../../../Extensions/dashboard_box.dart';
+import '../../../Extensions/hoverable_icon_text_item.dart';
 import '../../constants.dart';
 import 'package:sxui/app/pages/settings_page.dart';
 
@@ -16,8 +16,8 @@ import 'package:sxui/app/pages/settings_page.dart';
 /// - Navigation: Directs the user to the Settings page when tapped.
 ///
 /// @param key The optional key for this widget.
-class BoxX3 extends StatelessWidget {
-  const BoxX3({Key? key}) : super(key: key);
+class Setting extends StatelessWidget {
+  const Setting({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

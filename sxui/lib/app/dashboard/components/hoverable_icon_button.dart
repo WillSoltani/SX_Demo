@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/app/constants.dart';
+import 'package:sxui/app/shared/constants.dart';
 
 
 class HoverableIconButton extends StatefulWidget {

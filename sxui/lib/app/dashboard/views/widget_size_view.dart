@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/app/MainDashboard/data/widget_registry.dart';
-import 'package:sxui/app/models/tile_size.dart';
+import 'package:sxui/app/dashboard/data/widget_registry.dart';
+import 'package:sxui/app/shared/models/tile_size.dart';
 
 class WidgetSizeView extends StatelessWidget {
   final WidgetOption option;

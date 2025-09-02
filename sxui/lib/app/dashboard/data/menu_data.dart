@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sxui/app/models/sub_item.dart';
+import 'package:sxui/app/shared/models/sub_item.dart';
 
 List<SubItem> getMainItems() {
   return [

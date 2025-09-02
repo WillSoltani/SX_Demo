@@ -1,6 +1,7 @@
 // lib/app/dashboard/widgets/minimized_tabs_bar.dart
 import 'package:flutter/material.dart';
 import 'package:sxui/app/shared/models/tab_item.dart';
+import 'package:sxui/app/theme/app_theme.dart';
 
 class MinimizedTabsBar extends StatelessWidget {
   final List<TabItem> tabs;
@@ -16,72 +17,63 @@ class MinimizedTabsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final minimized = tabs.where((t) => t.isMinimized).toList();
-    if (minimized.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final palette = theme.extension<AppPalette>()!;
 
-    return Container(
+    if (tabs.isEmpty) return const SizedBox.shrink();
+
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, -2))],
+        color: palette.panel,
+        border: Border.all(color: palette.border),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withOpacity(0.25)
+                : Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.5),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: minimized
-              .map((tab) => _Btn(tab: tab, onClose: onClose, onRestore: onRestore))
-              .toList(),
-        ),
-      ),
-    );
-  }
-}
-
-class _Btn extends StatefulWidget {
-  final TabItem tab;
-  final ValueChanged<String> onClose;
-  final ValueChanged<String> onRestore;
-
-  const _Btn({required this.tab, required this.onClose, required this.onRestore});
-
-  @override
-  State<_Btn> createState() => _BtnState();
-}
-
-class _BtnState extends State<_Btn> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final tab = widget.tab;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: () => widget.onRestore(tab.id),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: _hover ? Colors.grey[600] : Colors.grey[700],
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(tab.title, style: const TextStyle(color: Colors.white)),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: () => widget.onClose(tab.id),
-                child: const Icon(Icons.close, size: 16, color: Colors.white70),
+          children: tabs.map((t) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: palette.panelAlt,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: palette.border),
               ),
-            ],
-          ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.tab, size: 14, color: cs.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    t.title,
+                    style: theme.textTheme.labelSmall,
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => onRestore(t.id),
+                    child: Icon(Icons.open_in_new, size: 14, color: theme.textTheme.labelSmall?.color),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () => onClose(t.id),
+                    child: Icon(Icons.close, size: 14, color: palette.textMuted),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ),
       ),
     );

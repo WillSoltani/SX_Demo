@@ -1,182 +1,218 @@
-// File: lib/Extensions/tab_properties.dart
-// Author: Will
-// Version: 1.1
-// Revised: 06-10-2024
+// sxui/lib/app/Extensions/tab_properties.dart
 import 'package:flutter/material.dart';
+import 'package:sxui/app/theme/app_theme.dart'; // for AppPalette (success/warning/error/panels/border)
 
 class TabProperties extends StatefulWidget {
-  final Widget child;
   final String title;
-  final VoidCallback onClose;
-  final VoidCallback onMinimize;
+  final Widget child;
+
+  /// Close the tab/window.
+  final VoidCallback? onClose;
+
+  /// Minimize the tab/window (used by your MinimizedTabsBar).
+  final VoidCallback? onMinimize;
+
+  /// Optional: external maximize toggle. If not provided, an internal toggle is used.
+  final VoidCallback? onToggleMaximize;
 
   const TabProperties({
-    Key? key,
+    super.key,
     required this.title,
-    required this.onClose,
-    required this.onMinimize,
     required this.child,
-  }) : super(key: key);
+    this.onClose,
+    this.onMinimize,
+    this.onToggleMaximize,
+  });
 
   @override
-  _TabPropertiesState createState() => _TabPropertiesState();
+  State<TabProperties> createState() => _TabPropertiesState();
 }
 
 class _TabPropertiesState extends State<TabProperties> {
-  bool _isCloseButtonHovered = false;
-  bool _isMinimizeButtonHovered = false;
-  bool _isResizeButtonHovered = false;
   bool _isMaximized = false;
+
+  bool _hoverClose = false;
+  bool _hoverMin = false;
+  bool _hoverMax = false;
+
+  void _toggleMax() {
+    if (widget.onToggleMaximize != null) {
+      widget.onToggleMaximize!();
+    } else {
+      setState(() => _isMaximized = !_isMaximized);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ClipRRect(
-        borderRadius:
-            BorderRadius.circular(12.0), // Apply rounding to all corners
-        child: Container(
-          width: _isMaximized
-              ? MediaQuery.of(context)
-                  .size
-                  .width // Make it full-screen horizontally
-              : MediaQuery.of(context).size.width * 0.45, // Default width
-          height: _isMaximized
-              ? MediaQuery.of(context)
-                  .size
-                  .height // Make it full-screen vertically
-              : _getTabHeight(), // Adjust height dynamically
-          decoration: BoxDecoration(
-            color: Colors.grey[900], // Background color
-            borderRadius:
-                BorderRadius.circular(12.0), // Rounded edges including bottom
-            boxShadow: [
-              if (!_isMaximized)
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-            ],
+    final theme = Theme.of(context);
+    final palette = theme.extension<AppPalette>()!;
+    final cs = theme.colorScheme;
+
+    // Root chrome (panel) uses theme panels & border — no hard-coded greys.
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: theme.cardColor, // panel color (light: #F3F4F6, dark: #1E293B)
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.border), // subtle divider (#E5E7EB / #334155)
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withOpacity(0.28)
+                : Colors.black.withOpacity(0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
           ),
-          child: Column(
-            children: [
-              // Header with control buttons and title
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                child: Row(
-                  children: [
-                    _buildControlButtons(),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          widget.title,
-                          style: TextStyle(
-                            fontSize:
-                                24, // Slightly larger for better visibility
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header bar
+          Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: palette.panelAlt, // layered panel (light: #E5E7EB, dark: #334155)
+              border: Border(
+                bottom: BorderSide(color: palette.border),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Traffic-light controls (semantic colors from palette)
+                _ControlDot(
+                  color: palette.error, // close
+                  icon: Icons.close_rounded,
+                  hovered: _hoverClose,
+                  onEnter: () => setState(() => _hoverClose = true),
+                  onExit: () => setState(() => _hoverClose = false),
+                  onTap: widget.onClose,
+                  tooltip: 'Close',
+                ),
+                const SizedBox(width: 6),
+                _ControlDot(
+                  color: palette.warning, // minimize
+                  icon: Icons.remove_rounded,
+                  hovered: _hoverMin,
+                  onEnter: () => setState(() => _hoverMin = true),
+                  onExit: () => setState(() => _hoverMin = false),
+                  onTap: widget.onMinimize,
+                  tooltip: 'Minimize',
+                ),
+                const SizedBox(width: 6),
+                _ControlDot(
+                  color: palette.success, // maximize / restore
+                  icon: _isMaximized ? Icons.filter_none : Icons.crop_square_rounded,
+                  hovered: _hoverMax,
+                  onEnter: () => setState(() => _hoverMax = true),
+                  onExit: () => setState(() => _hoverMax = false),
+                  onTap: _toggleMax,
+                  tooltip: _isMaximized ? 'Restore' : 'Maximize',
+                ),
+
+                const SizedBox(width: 12),
+                // Title — uses header typography (Light: #111827, Dark: #F9FAFB)
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
-                    SizedBox(width: 36), // Spacer for alignment
-                  ],
+                  ),
                 ),
-              ),
-              Divider(color: Colors.grey),
-              // Child content
-              Expanded(
-                child: widget.child,
-              ),
-            ],
+
+                // Optional affordance on the right (e.g., link color uses primary)
+                Icon(Icons.drag_indicator, size: 16, color: cs.primary.withOpacity(0.66)),
+              ],
+            ),
           ),
-        ),
+
+          // Content area
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            color: theme.cardColor,
+            constraints: _isMaximized
+                ? const BoxConstraints(minHeight: 420) // give it more breathing room when "maximized"
+                : const BoxConstraints(),
+            child: DefaultTextStyle.merge(
+              style: theme.textTheme.bodyMedium!, // Light body: #374151, Dark body: #94A3B8
+              child: widget.child,
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  // Adjust height based on the tab title (20% smaller for Add Customer and Add Product)
-  double _getTabHeight() {
-    if (widget.title == 'Add Customer' || widget.title == 'Add Product') {
-      return MediaQuery.of(context).size.height * 0.62; // 20% smaller height
-    }
-    return MediaQuery.of(context).size.height * 0.75; // Default height
-  }
+class _ControlDot extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final bool hovered;
+  final VoidCallback? onTap;
+  final VoidCallback? onEnter;
+  final VoidCallback? onExit;
+  final String tooltip;
 
-  // Build control buttons (close, minimize, resize)
-  Widget _buildControlButtons() {
-    return Row(
-      children: [
-        _buildControlButton(
-          isHovered: _isCloseButtonHovered,
-          onTap: widget.onClose,
-          color: Colors.red,
-          icon: Icons.close,
-          onHoverChange: (hovered) {
-            setState(() {
-              _isCloseButtonHovered = hovered;
-            });
-          },
+  const _ControlDot({
+    required this.color,
+    required this.icon,
+    required this.hovered,
+    required this.onTap,
+    this.onEnter,
+    this.onExit,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final dot = AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: hovered
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.55),
+                  blurRadius: 10,
+                  spreadRadius: 0.5,
+                ),
+              ]
+            : const [],
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? Colors.black.withOpacity(0.25)
+              : Colors.white.withOpacity(0.65),
+          width: hovered ? 1.6 : 1.0,
         ),
-        _buildControlButton(
-          isHovered: _isMinimizeButtonHovered,
-          onTap: widget.onMinimize,
-          color: Colors.yellow[700]!,
-          icon: Icons.minimize,
-          onHoverChange: (hovered) {
-            setState(() {
-              _isMinimizeButtonHovered = hovered;
-            });
-          },
-        ),
-        _buildControlButton(
-          isHovered: _isResizeButtonHovered,
-          onTap: () {
-            setState(() {
-              _isMaximized = !_isMaximized;
-            });
-          },
-          color: Colors.green,
-          icon: _isMaximized ? Icons.crop_square : Icons.crop_din,
-          onHoverChange: (hovered) {
-            setState(() {
-              _isResizeButtonHovered = hovered;
-            });
-          },
-        ),
-      ],
+      ),
+      child: AnimatedOpacity(
+        opacity: hovered ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 120),
+        child: Icon(icon, size: 12, color: Colors.white),
+      ),
     );
-  }
 
-  // Utility function to build a control button with hover effects
-  Widget _buildControlButton({
-    required bool isHovered,
-    required VoidCallback onTap,
-    required Color color,
-    required IconData icon,
-    required Function(bool) onHoverChange,
-  }) {
     return MouseRegion(
-      onEnter: (_) => onHoverChange(true),
-      onExit: (_) => onHoverChange(false),
+      onEnter: (_) => onEnter?.call(),
+      onExit: (_) => onExit?.call(),
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          width: 20,
-          height: 20,
-          margin: EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-          child: isHovered
-              ? Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 14,
-                )
-              : SizedBox(),
-        ),
+        behavior: HitTestBehavior.opaque,
+        child: Tooltip(message: tooltip, child: dot),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:sxui/app/models/tile_size.dart';
+import 'package:sxui/app/shared/models/tile_size.dart';
 
 class TileData {
   final String id;

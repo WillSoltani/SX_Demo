@@ -1,34 +1,45 @@
+// lib/app/dashboard/widgets/tile_chrome.dart
 import 'package:flutter/material.dart';
+import 'package:sxui/app/theme/app_theme.dart'; // for AppPalette
 
 class TileChrome extends StatelessWidget {
   final double height;
   final Widget child;
-  final bool highlight;
-  const TileChrome({super.key, required this.height, required this.child, this.highlight = false});
+
+  const TileChrome({
+    super.key,
+    required this.height,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final palette = theme.extension<AppPalette>()!;
+
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: theme.cardColor,                 // panel color per mode
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: palette.border.withOpacity(0.8)), // subtle dividers
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withOpacity(0.25)
+                : Colors.black.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: height,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0B0F1A), Color(0xFF111827)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: highlight ? Colors.amberAccent : Colors.white12,
-            width: highlight ? 3 : 1,
-          ),
-          boxShadow: highlight
-              ? [BoxShadow(color: Colors.amberAccent.withOpacity(0.6), blurRadius: 20, spreadRadius: 2)]
-              : [],
+      child: DefaultTextStyle.merge(
+        style: theme.textTheme.bodyMedium!.copyWith(
+          color: theme.textTheme.bodyMedium!.color ?? cs.onSurface,
         ),
-        child: Material(color: Colors.transparent, child: child),
+        child: child,
       ),
     );
   }
